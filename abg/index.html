@@ -149,11 +149,14 @@ function interp(){
   }
 
   // ④ anion gap (optional)
+  const labsLink=`<a href="../labs/#calc-ag" style="color:#5fd8ac;text-decoration:none">→ labs AG 計算機</a>`;
+  const naLink=`<a href="../labs/#na" style="color:#5fd8ac;text-decoration:none">Na 卡片</a>`;
+  const clLink=`<a href="../labs/#cl" style="color:#5fd8ac;text-decoration:none">Cl 卡片</a>`;
   if(na!=null&&cl!=null){
     let ag=na-(cl+hco3),agtxt=`AG = ${na} − (${cl}+${hco3}) = ${ag.toFixed(0)}`,cag=ag;
     if(alb!=null){cag=ag+2.5*(4-alb);agtxt+=`;白蛋白校正 ≈ ${cag.toFixed(0)}`;}
     const high=cag>12;
-    push('④ 陰離子間隙',agtxt+(high?' → 升高 (high AG)':' → 正常範圍'),high?'acid':'normal');
+    push('④ 陰離子間隙',agtxt+(high?` → 升高 (high AG) · ${labsLink}`:` → 正常範圍 · ${labsLink}`),high?'acid':'normal');
     if(high){
       const dd=(cag-12)/(24-hco3);let m;
       if(!isFinite(dd)||Math.abs(24-hco3)<0.5)m='HCO₃ 接近 24,delta-ratio 不穩定,請結合臨床。';
@@ -162,10 +165,10 @@ function interp(){
       else m=`delta-ratio ${dd.toFixed(1)} > 2 → 同時合併代謝性鹼中毒或慢性呼吸性酸中毒(HCO₃ 基礎偏高)。`;
       push('⑤ delta-delta',m+' 高 AG 病因 → MUDPILES(乳酸、酮酸、腎衰、毒物…)。');
     }else{
-      push('⑤ 病因方向','若為正常 AG 代謝性酸中毒 → 想腸胃道 HCO₃ 流失(腹瀉)或腎小管酸中毒(HARDUP)。');
+      push('⑤ 病因方向',`若為正常 AG 代謝性酸中毒 → 想腸胃道 HCO₃ 流失(腹瀉)或腎小管酸中毒(HARDUP) · ${naLink} · ${clLink}。`);
     }
   }else{
-    push('④ 陰離子間隙','(選填 Na、Cl 可計算 AG 與 delta-delta)','info');
+    push('④ 陰離子間隙',`(選填 Na、Cl 可計算 AG 與 delta-delta;或直接用 ${labsLink} 算)`,'info');
   }
 
   out.innerHTML=S.map(s=>`<div class="step ${s.tone}"><span class="tag">${s.tag}</span><span>${s.t}</span></div>`).join('');
@@ -179,6 +182,19 @@ document.getElementById('presets').addEventListener('click',e=>{
   const p=PRESETS[b.dataset.k];fields.forEach(f=>document.getElementById(f).value=p[f]??'');interp();
 });
 fields.forEach(f=>document.getElementById(f).addEventListener('input',interp));
+
+// 從 URL query string 預填(從 labs AG 計算機跳過來時帶值)
+// 支援:?pH=&pco2=&hco3=&na=&cl=&alb=
+(function prefillFromQuery(){
+  const p=new URLSearchParams(location.search);
+  const keymap={ph:'pH',pH:'pH',pco2:'pco2',paco2:'pco2',hco3:'hco3',na:'na',cl:'cl',alb:'alb',albumin:'alb'};
+  let any=false;
+  for(const [k,v] of p){
+    const id=keymap[k]||keymap[k.toLowerCase()];
+    if(id&&v!==''){document.getElementById(id).value=v;any=true;}
+  }
+  if(any){history.replaceState(null,'',location.pathname);}
+})();
 interp();
 </script>
 <script data-goatcounter="https://iameric6411.goatcounter.com/count"

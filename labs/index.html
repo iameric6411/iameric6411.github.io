@@ -314,6 +314,10 @@ function calcAG(){
   if(alb!=null){const ca=ag+2.5*(4.0-alb);
     lines.push(`<span style="color:#7f9489">白蛋白校正 AG ≈ ${ca.toFixed(0)}(albumin 每低 1 g/dL 約 +2.5)</span>`);}
   if(ag>12)lines.push('<span style="color:#7f9489">高 AG 代謝性酸中毒 → 想 MUDPILES(乳酸、酮酸、腎衰、毒物…)</span>');
+  // 帶值跳 ABG 完整判讀
+  const qs=new URLSearchParams({na,cl,hco3});
+  if(alb!=null)qs.set('alb',alb);
+  lines.push(`<a href="../abg/?${qs}" class="link" style="margin-top:10px;display:inline-block">→ 用 ABG 判讀器接續判讀(代償 / delta-delta)</a>`);
   out.innerHTML=lines.join('<br>');
 }
 function calcEgfr(){
