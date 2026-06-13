@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>實驗室檢查對照 · 電解質 / 腎 / 肝 / CBC</title>
+<title>實驗室檢查對照 · 常用檢驗 panel</title>
 <style>
   :root{
     --bg:#070a0d;--ink:#e7f3ee;--muted:#7f9489;--ghost:#46584f;
@@ -201,9 +201,63 @@ const LABS=[
     low:{causes:['ITP','TTP/HUS、DIC(消耗)','脾隔離','骨髓抑制、化療、藥物','敗血症'],
          mgmt:['< 20 出血風險高、避免侵入性處置','找原因:抹片、凝血、藥物史','必要時輸血小板(TTP 為禁忌)']},
     note:'< 20×10³ 自發性出血風險上升;TTP 不可輸血小板(會惡化血栓)。'},
+
+  // ===== 凝血 =====
+  {id:'inr',name:'凝血酶原時間 / INR',en:'PT/INR',panel:'凝血',unit:'INR',ref:[0.8,1.2],critical:{high:5},
+    high:{causes:['warfarin / VKA 抗凝','肝病(凝血因子合成下降)','維生素 K 缺乏','DIC、大量輸血稀釋'],
+          mgmt:['warfarin 過量:停藥 ± 口服維生素 K','嚴重出血:PCC(優先)或 FFP + IV 維生素 K','評估出血風險與抗凝適應症']},
+    note:'反映外在 / 共同路徑(因子 II、VII、IX、X);PT 約 11–13.5 秒,warfarin 常見目標 INR 2–3。'},
+  {id:'aptt',name:'活化部分凝血活酶時間',en:'aPTT',panel:'凝血',unit:'秒',ref:[25,35],critical:null,
+    high:{causes:['heparin(UFH)治療','血友病(因子 VIII / IX 缺乏)','von Willebrand 病','抗磷脂抗體 / 狼瘡抗凝物','肝病、DIC'],
+          mgmt:['heparin 監測與調量','延長且出血:找因子缺乏 / 抑制物','狼瘡抗凝物反而促血栓,須臨床判讀']},
+    note:'反映內在 / 共同路徑;「PT 看 warfarin、aPTT 看 heparin」是常用記法。'},
+  {id:'ddimer',name:'D-雙體',en:'D-dimer',panel:'凝血',unit:'µg/mL FEU',ref:[null,0.5],critical:null,
+    high:{causes:['靜脈血栓栓塞(DVT / PE)','DIC','近期手術 / 外傷、感染','懷孕、惡性腫瘤、年長'],
+          mgmt:['高值非特異,需影像確診(CTPA、都卜勒)','低臨床機率 + 陰性可排除 VTE']},
+    note:'高敏感、低特異:適合「排除」低 / 中度可能性的 VTE,不能單獨「確診」。'},
+
+  // ===== 心肌酵素 =====
+  {id:'trop',name:'心肌旋轉蛋白',en:'Troponin',panel:'心肌酵素',unit:'ng/mL',ref:[null,0.04],critical:null,
+    high:{causes:['急性心肌梗塞 / ACS','心肌炎、心衰、快速心律不整','肺栓塞、敗血症','腎衰竭(清除下降)'],
+          mgmt:['結合症狀與心電圖,ACS 走 ACS 流程','看「連續變化(rise / fall)」而非單點','非 ACS 升高需找其他原因']},
+    note:'高敏感 troponin 看 99th percentile 與動態變化;單次升高 ≠ 心肌梗塞(腎衰、敗血、PE 皆可升)。'},
+  {id:'bnp',name:'B 型利鈉肽',en:'BNP',panel:'心肌酵素',unit:'pg/mL',ref:[null,100],critical:null,
+    high:{causes:['心臟衰竭(容積 / 壓力負荷)','腎衰竭','肺栓塞、肺高壓','年長、心房顫動'],
+          mgmt:['評估心衰、利尿與容積處理','結合臨床與心臟超音波']},
+    note:'BNP < 100 使急性心衰可能性低(高陰性預測值);腎衰 / 年長偏高、肥胖偏低。NT-proBNP 數值較高且依年齡調整。'},
+
+  // ===== 發炎 =====
+  {id:'crp',name:'C 反應蛋白',en:'CRP',panel:'發炎',unit:'mg/L',ref:[null,5],critical:null,
+    high:{causes:['細菌感染','組織發炎 / 壞死','自體免疫疾病','惡性腫瘤'],
+          mgmt:['找感染 / 發炎源','追蹤治療反應(下降快)']},
+    note:'比 ESR 反應快(數小時上升、治療後快速下降),適合監測急性發炎與療效。'},
+  {id:'esr',name:'紅血球沉降速率',en:'ESR',panel:'發炎',unit:'mm/hr',ref:[null,20],critical:null,
+    high:{causes:['感染、發炎','自體免疫(巨細胞動脈炎、PMR 常 > 50)','惡性腫瘤、多發性骨髓瘤','懷孕、貧血、年長'],
+          mgmt:['非特異,結合臨床','極高(> 100)聯想 GCA、感染、骨髓瘤、惡性']},
+    note:'上升與下降都慢,受年齡、性別、貧血、懷孕、免疫球蛋白影響(粗估上限:男 年齡/2、女 (年齡+10)/2)。'},
+
+  // ===== 血糖內分泌 =====
+  {id:'glu',name:'血糖(空腹)',en:'Glucose',panel:'血糖內分泌',unit:'mg/dL',ref:[70,99],critical:{low:50,high:500},
+    high:{causes:['糖尿病','壓力、感染、類固醇','DKA / HHS','胰臟疾病'],
+          mgmt:['控糖、找誘因','DKA / HHS 緊急:輸液、IV insulin、監測血鉀']},
+    low:{causes:['insulin / sulfonylurea 過量','進食不足、運動過度','肝衰竭、敗血症','腎上腺功能不全'],
+         mgmt:['給糖:清醒口服、意識不清 IV D50','找並矯正原因','SU / 長效 insulin 低血糖需延長觀察']},
+    note:'診斷糖尿病:空腹 ≥ 126、隨機 ≥ 200 + 症狀、或 HbA1c ≥ 6.5%;空腹 100–125 為糖尿病前期。'},
+  {id:'a1c',name:'糖化血色素',en:'HbA1c',panel:'血糖內分泌',unit:'%',ref:[4,5.6],critical:null,
+    high:{causes:['糖尿病、長期血糖控制不佳','反映近 2–3 個月平均血糖'],
+          mgmt:['調整治療(多數目標 < 7%)、生活型態','個別化目標(年長 / 共病可放寬)']},
+    low:{causes:['溶血性貧血、近期失血 / 輸血','缺鐵治療後紅血球更新快'],
+         mgmt:['有干擾因素時改用其他血糖指標解讀']},
+    note:'反映近 2–3 月平均血糖;溶血、貧血、近期輸血、血紅素變異會使結果失真。'},
+  {id:'tsh',name:'甲狀腺刺激素',en:'TSH',panel:'血糖內分泌',unit:'µIU/mL',ref:[0.4,4.0],critical:null,
+    high:{causes:['原發性甲狀腺功能低下(最常見,如橋本氏)','藥物','次發性少見'],
+          mgmt:['驗 free T4 確認','levothyroxine 補充並追蹤']},
+    low:{causes:['甲狀腺功能亢進(Graves、毒性結節)','過度補充甲狀腺素','次發性低下(腦垂體 / 下視丘)'],
+         mgmt:['驗 free T4 / T3','亢進:抗甲狀腺藥、評估治療']},
+    note:'甲狀腺篩檢首選;原發性:高 TSH → 低下、低 TSH → 亢進,須配合 free T4 判讀。'},
 ];
 
-const PANELS=['全部','電解質','腎功能','肝功能','CBC']; // 之後擴充:ABG…
+const PANELS=['全部','電解質','腎功能','肝功能','CBC','凝血','心肌酵素','發炎','血糖內分泌'];
 // ==========================================================================
 
 const cardsEl=document.getElementById('cards'),countEl=document.getElementById('count');
