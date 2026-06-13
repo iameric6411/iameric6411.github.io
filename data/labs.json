@@ -1061,49 +1061,67 @@
   },
   {
     "id": "trop",
-    "name": "心肌旋轉蛋白",
-    "en": "Troponin",
+    "name": "高敏感性心肌旋轉蛋白",
+    "en": "hs-cTn",
     "panel": "心肌酵素",
-    "unit": "ng/mL",
+    "unit": "ng/L",
     "ref": [
       null,
-      0.04
+      14
     ],
     "critical": null,
     "high": {
       "causes": [
-        "急性心肌梗塞 / ACS",
-        "心肌炎、心衰、快速心律不整",
-        "肺栓塞、敗血症",
-        "腎衰竭(清除下降)"
+        "急性冠心症 (ACS):STEMI / NSTEMI / UA",
+        "心肌炎、Takotsubo、急性心衰",
+        "肺栓塞、敗血症、SAH、CVA",
+        "腎衰竭(清除下降,可慢性升高)",
+        "快速性心律不整、心臟挫傷",
+        "化療後:anthracycline / trastuzumab"
       ],
       "mgmt": [
-        "結合症狀與心電圖,ACS 走 ACS 流程",
-        "看「連續變化(rise / fall)」而非單點",
-        "非 ACS 升高需找其他原因"
+        "ACS 流程:走 ESC 0/1h(看 0h 絕對值 + 1h Δ),不只看單點",
+        "STEMI → 立即 cath lab;NSTEMI 高風險(GRACE、動態變化、症狀)→ 24h 內 cath",
+        "非 ACS 升高:找 PE / 心肌炎 / 敗血症 / 腎衰等原因",
+        "0/1h hs-cTnT 例:0h < 5 + Δ < 3 → rule-out;0h ≥ 52 或 Δ ≥ 5 → rule-in"
       ]
     },
-    "note": "高敏感 troponin 看 99th percentile 與動態變化;單次升高 ≠ 心肌梗塞(腎衰、敗血、PE 皆可升)。",
+    "note": "ESC 2023 NSTE-ACS:hs-cTn 用 99th percentile 性別專屬切點(hs-cTnT 男 22、女 14 ng/L;hs-cTnI 廠商間異,長庚 / 多數院內公佈 cut-off)。看連續變化(0/1h 或 0/2h 演算法)比單點重要。Conventional cTnI 0.04 ng/mL = 40 ng/L,舊報告會看到。",
     "aliases": [
       "troponin",
       "TnI",
       "TnT",
       "hsTnI",
       "hsTnT",
+      "hs-cTnI",
+      "hs-cTnT",
+      "hsTn",
       "cTn",
       "cTnI",
       "cTnT",
       "high-sensitivity troponin",
+      "high sensitivity troponin",
       "旋轉蛋白",
-      "心肌旋轉蛋白"
+      "心肌旋轉蛋白",
+      "高敏感心肌旋轉蛋白",
+      "高敏感性心肌旋轉蛋白"
     ],
     "pitfall": [
-      "腎衰、心衰、心肌炎、PE、敗血症、SAH、運動後都可升高 — 非 ACS 特異",
-      "看「動態變化(rise / fall ≥ 20%)」比單點重要;hs-Tn 用 0/1 h 或 0/3 h 流程",
-      "不同檢驗單位 / 切點(ng/mL vs pg/mL、99th percentile 因試劑而異)不可互通",
-      "COVID、化療(anthracycline、trastuzumab)後可慢性升高"
+      "腎衰、心衰、心肌炎、PE、敗血症、SAH、運動後可慢性升高,非 ACS 特異",
+      "看「動態變化(absolute change,low value ≥ 50%)」而非單點;hs-cTn 走 0/1h 或 0/2h algorithm",
+      "不同單位 / 切點(ng/mL vs ng/L、hs-cTnT vs hs-cTnI、99th percentile 隨試劑)不可互通",
+      "性別專屬切點:單一切點 0.04 ng/mL = 40 ng/L 對女性會 miss diagnosis",
+      "COVID、anthracycline、trastuzumab 化療後可慢性升高,需基線比對"
     ],
-    "quick": "連續看(rise / fall ≥ 20%)走 ESC 0/1h 流程;非 ACS 升高想腎衰 / PE / 心肌炎 / 敗血症"
+    "quick": "走 ESC 0/1h:0h 低 + Δ 微 → rule-out;0h 高 或 Δ 明顯 → rule-in;非 ACS 升高想 PE / 心肌炎 / 腎衰 / 敗血症",
+    "refMale": [
+      null,
+      22
+    ],
+    "refFemale": [
+      null,
+      14
+    ]
   },
   {
     "id": "bnp",

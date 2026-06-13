@@ -77,6 +77,14 @@
       <div class="field"><label>Na</label><input id="na" type="number" inputmode="decimal" placeholder="選填"><span class="u">mEq/L</span></div>
       <div class="field"><label>Cl</label><input id="cl" type="number" inputmode="decimal" placeholder="選填"><span class="u">mEq/L</span></div>
       <div class="field"><label>Albumin</label><input id="alb" type="number" step="0.1" inputmode="decimal" placeholder="選填"><span class="u">g/dL</span></div>
+      <div class="field"><label>呼吸障礙時程</label>
+        <select id="dur" style="background:#0a0f14;border:1px solid #18242d;border-radius:8px;padding:10px 11px;color:var(--ink);font-family:var(--mono);font-size:13px;outline:none">
+          <option value="auto">自動(顯示兩者)</option>
+          <option value="acute">急性</option>
+          <option value="chronic">慢性</option>
+        </select>
+        <span class="u">影響呼吸性代償公式</span>
+      </div>
     </div>
     <div class="presets" id="presets"></div>
   </div>
@@ -155,10 +163,40 @@ function interp(){
     push('③ 呼吸代償',m);
   }else if(primary==='呼吸性酸中毒'){
     const ac=24+1*(pco2-40)/10,ch=24+3.5*(pco2-40)/10;
-    push('③ 代謝代償',`急性預期 HCO₃ ≈ ${ac.toFixed(0)}、慢性 ≈ ${ch.toFixed(0)};實測 ${hco3} → 越接近慢性值代表代償越久(越慢性)。`);
+    const dur=document.getElementById('dur').value;
+    if(dur==='acute'){
+      let m=`急性公式:預期 HCO₃ ≈ 24 + 0.1×(${pco2}−40) = ${ac.toFixed(0)} (±2);實測 ${hco3}`;
+      if(hco3>ac+2)m+=' → 高於急性預期 → 合併代謝鹼或已慢性化。';
+      else if(hco3<ac-2)m+=' → 低於急性預期 → 合併代謝性酸中毒。';
+      else m+=' → 符合急性代償。';
+      push('③ 代謝代償',m);
+    }else if(dur==='chronic'){
+      let m=`慢性公式:預期 HCO₃ ≈ 24 + 0.35×(${pco2}−40) = ${ch.toFixed(0)} (±2);實測 ${hco3}`;
+      if(hco3>ch+2)m+=' → 高於慢性預期 → 合併代謝鹼。';
+      else if(hco3<ch-2)m+=' → 低於慢性預期 → 合併代謝性酸中毒。';
+      else m+=' → 符合慢性代償。';
+      push('③ 代謝代償',m);
+    }else{
+      push('③ 代謝代償',`急性預期 HCO₃ ≈ ${ac.toFixed(0)}、慢性 ≈ ${ch.toFixed(0)};實測 ${hco3} → 越接近慢性值代表越慢性。(上方可選 急性/慢性 鎖定一條公式並判讀混合)`);
+    }
   }else if(primary==='呼吸性鹼中毒'){
     const ac=24-2*(40-pco2)/10,ch=24-4*(40-pco2)/10;
-    push('③ 代謝代償',`急性預期 HCO₃ ≈ ${ac.toFixed(0)}、慢性 ≈ ${ch.toFixed(0)};實測 ${hco3}。`);
+    const dur=document.getElementById('dur').value;
+    if(dur==='acute'){
+      let m=`急性公式:預期 HCO₃ ≈ 24 − 0.2×(40−${pco2}) = ${ac.toFixed(0)} (±2);實測 ${hco3}`;
+      if(hco3>ac+2)m+=' → 高於急性預期 → 合併代謝鹼。';
+      else if(hco3<ac-2)m+=' → 低於急性預期 → 合併代謝酸或已慢性化。';
+      else m+=' → 符合急性代償。';
+      push('③ 代謝代償',m);
+    }else if(dur==='chronic'){
+      let m=`慢性公式:預期 HCO₃ ≈ 24 − 0.4×(40−${pco2}) = ${ch.toFixed(0)} (±2);實測 ${hco3}`;
+      if(hco3>ch+2)m+=' → 高於慢性預期 → 合併代謝鹼。';
+      else if(hco3<ch-2)m+=' → 低於慢性預期 → 合併代謝酸。';
+      else m+=' → 符合慢性代償。';
+      push('③ 代謝代償',m);
+    }else{
+      push('③ 代謝代償',`急性預期 HCO₃ ≈ ${ac.toFixed(0)}、慢性 ≈ ${ch.toFixed(0)};實測 ${hco3}。(上方可選 急性/慢性 鎖定一條公式)`);
+    }
   }
 
   // ④ anion gap (optional)
@@ -211,6 +249,7 @@ function validateRanges(){
   }
 }
 fields.forEach(f=>document.getElementById(f).addEventListener('input',()=>{validateRanges();interp();}));
+document.getElementById('dur').addEventListener('change',interp);
 
 // 從 URL query string 預填(從 labs AG 計算機跳過來時帶值)
 // 支援:?pH=&pco2=&hco3=&na=&cl=&alb=
