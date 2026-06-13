@@ -63,6 +63,11 @@
   .tag{font-size:12px;padding:4px 9px;border-radius:6px;background:#0a0f14;border:1px solid #18242d;color:#aebcb4}
   .dir.hi .tag.mg{border-color:#3a2519;color:#f0b48c}
   .dir.lo .tag.mg{border-color:#1a2e3f;color:#9cc7ea}
+  .dir.pf .dirhead{color:#e8c46a}
+  .pflist{list-style:none;margin:0;padding:0}
+  .pflist li{font-size:12.5px;line-height:1.6;color:#bfd0c7;padding:6px 0 6px 18px;position:relative;border-top:1px solid #131d22}
+  .pflist li:first-child{border-top:none;padding-top:2px}
+  .pflist li:before{content:"!";position:absolute;left:4px;top:6px;color:#e8c46a;font-family:var(--mono);font-weight:700}
   .note{margin-top:13px;font-size:12px;line-height:1.6;color:var(--muted);border-left:2px solid #1d3329;padding-left:10px}
   .link{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--safe);
     text-decoration:none;border:1px solid #1d3329;border-radius:7px;padding:7px 12px;transition:.15s}
@@ -174,6 +179,13 @@ function dirBlock(d,o){
     <p class="sec" style="margin-top:9px"><b>處置</b></p><div class="tags">${mgmt}</div>
   </div>`;
 }
+function pfBlock(items){
+  if(!items||!items.length)return '';
+  return `<div class="dir pf">
+    <div class="dirhead">⚠ 陷阱 / 注意 pitfalls</div>
+    <ul class="pflist">${items.map(x=>`<li>${x}</li>`).join('')}</ul>
+  </div>`;
+}
 
 function render(){
   if(panel==='計算機'){
@@ -190,7 +202,8 @@ function render(){
     if(!q)return true;
     const hay=[l.name,l.en,l.panel,...(l.aliases||[]),
       ...(l.high?[...l.high.causes,...l.high.mgmt]:[]),
-      ...(l.low?[...l.low.causes,...l.low.mgmt]:[]),l.note||''].join(' ').toLowerCase();
+      ...(l.low?[...l.low.causes,...l.low.mgmt]:[]),
+      ...(l.pitfall||[]),l.note||''].join(' ').toLowerCase();
     return hay.includes(q);
   });
   // 釘選的排在最上(保持原順序)
@@ -217,6 +230,7 @@ function render(){
       <div class="cbody">
         ${dirBlock('hi',l.high)}
         ${dirBlock('lo',l.low)}
+        ${pfBlock(l.pitfall)}
         ${l.note?`<p class="note">${l.note}</p>`:''}
         ${link}
       </div>
