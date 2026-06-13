@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>實驗室檢查對照 · 電解質</title>
+<title>實驗室檢查對照 · 電解質 / 腎 / 肝 / CBC</title>
 <style>
   :root{
     --bg:#070a0d;--ink:#e7f3ee;--muted:#7f9489;--ghost:#46584f;
@@ -129,15 +129,92 @@ const LABS=[
     low:{causes:['再餵食症候群(refeeding)','DKA 治療過程','慢性酒精','呼吸性鹼中毒'],
          mgmt:['補充磷','再餵食高風險者預防性監測與補充']},
     note:'再餵食症候群:低磷、低鉀、低鎂同時發生,補充營養前後須監測。'},
+
+  // ===== 腎功能 =====
+  {id:'bun',name:'尿素氮',en:'BUN',panel:'腎功能',unit:'mg/dL',ref:[7,20],critical:null,
+    high:{causes:['腎前性:脫水、心衰、出血、休克','腎性:急性腎損傷、慢性腎臟病','上消化道出血、高蛋白飲食','類固醇、分解代謝增加'],
+          mgmt:['依 BUN/Cr 比區分腎前/腎性','補液矯正腎前性','治療原發腎病']},
+    low:{causes:['肝衰竭(尿素合成下降)','營養不良/低蛋白','過度水化、懷孕'],
+         mgmt:['治療原發病因']},
+    note:'BUN/Cr 比 > 20 提示腎前性(脫水、出血);約 10–15 提示腎性,過低見於肝病。'},
+  {id:'cr',name:'肌酸酐',en:'Cr',panel:'腎功能',unit:'mg/dL',ref:[0.6,1.3],critical:null,
+    high:{causes:['急性腎損傷、慢性腎臟病','腎血流下降','橫紋肌溶解','腎毒性藥物(NSAID、aminoglycoside、顯影劑)','肌肉量大'],
+          mgmt:['停腎毒性藥、調整劑量','補液、治療原發病因','計算 eGFR 評估分期']},
+    low:{causes:['肌肉量少、惡病質','懷孕(GFR 上升)'],
+         mgmt:['多無臨床意義,結合臨床判讀']},
+    note:'受肌肉量、年齡、性別影響;急性變化看「趨勢」比單點數值更重要。'},
+  {id:'egfr',name:'估算腎絲球過濾率',en:'eGFR',panel:'腎功能',unit:'mL/min/1.73m²',ref:[90,null],critical:null,
+    low:{causes:['慢性腎臟病(CKD)','急性腎損傷','腎血流下降'],
+         mgmt:['依分期處置、避免腎毒性藥物','控制血壓/血糖、依腎功能調整藥物劑量','G4–G5 轉介腎臟科、評估透析時機']},
+    note:'CKD 分期:G1 ≥90、G2 60–89、G3a 45–59、G3b 30–44、G4 15–29、G5 < 15,須配合白蛋白尿分級判讀。'},
+
+  // ===== 肝功能 =====
+  {id:'ast',name:'天門冬胺酸轉胺酶',en:'AST/GOT',panel:'肝功能',unit:'U/L',ref:[10,40],critical:null,
+    high:{causes:['肝細胞損傷:病毒性肝炎、藥物、缺血','酒精性肝病(AST/ALT > 2)','非肝源:心肌梗塞、肌肉損傷、溶血'],
+          mgmt:['找肝損傷原因、停肝毒性藥/戒酒','與 ALT 一起判讀來源']},
+    note:'非肝特異,也存在於心肌與骨骼肌,需與 ALT 對照。'},
+  {id:'alt',name:'丙胺酸轉胺酶',en:'ALT/GPT',panel:'肝功能',unit:'U/L',ref:[7,40],critical:null,
+    high:{causes:['病毒性肝炎','脂肪肝(NAFLD)','藥物性肝損傷','酒精'],
+          mgmt:['依原因處理、戒酒、停肝毒性藥','追蹤肝功能趨勢']},
+    note:'較 AST 肝特異。ALT > AST 多見於病毒性/脂肪肝;AST/ALT > 2 提示酒精性肝病。'},
+  {id:'alp',name:'鹼性磷酸酶',en:'ALP',panel:'肝功能',unit:'U/L',ref:[40,130],critical:null,
+    high:{causes:['膽道阻塞/膽汁鬱積','骨病變:生長期、骨折、Paget 病、骨轉移','懷孕(胎盤來源)'],
+          mgmt:['配合 GGT 區分肝源 vs 骨源','影像評估膽道']},
+    note:'GGT 同時升高 → 肝膽來源;GGT 正常而 ALP 高 → 骨源或生理性。'},
+  {id:'ggt',name:'γ-麩胺醯轉移酶',en:'GGT',panel:'肝功能',unit:'U/L',ref:[10,60],critical:null,
+    high:{causes:['膽汁鬱積、膽道疾病','酒精','酵素誘導藥物(如 phenytoin)'],
+          mgmt:['確認 ALP 升高是否肝膽源','評估酒精使用']},
+    note:'最常用來判斷 ALP 升高是否來自肝膽系統。'},
+  {id:'tbil',name:'總膽紅素',en:'T.Bil',panel:'肝功能',unit:'mg/dL',ref:[0.3,1.2],critical:null,
+    high:{causes:['間接(未結合)為主:溶血、Gilbert、新生兒','直接(結合)為主:膽道阻塞、肝內膽汁鬱積','肝細胞性:混合上升'],
+          mgmt:['測 direct/indirect 分流','溶血 vs 阻塞 vs 肝細胞鑑別','影像評估膽道']},
+    note:'直接膽紅素佔總量 > 50% → 阻塞/肝細胞性;以間接為主 → 溶血或 Gilbert。'},
+  {id:'alb',name:'白蛋白',en:'Alb',panel:'肝功能',unit:'g/dL',ref:[3.5,5.0],critical:null,
+    high:{causes:['脫水(血液濃縮、假性升高)'],
+          mgmt:['補液、無特異處置']},
+    low:{causes:['慢性肝病(合成下降)','腎病症候群(流失)','營養不良','發炎(負向急性期蛋白)'],
+         mgmt:['治療原發病因、營養支持','解讀蛋白結合物(如校正鈣)需一併考量']},
+    note:'低白蛋白會低估總鈣 → 需校正鈣;也影響藥物的蛋白結合。'},
+
+  // ===== CBC =====
+  {id:'wbc',name:'白血球',en:'WBC',panel:'CBC',unit:'×10³/µL',ref:[4,11],critical:{low:2.0,high:50},
+    high:{causes:['細菌感染、發炎','壓力/類固醇/腎上腺素','白血病、骨髓增生','抽菸、脾切除後'],
+          mgmt:['看 differential 分辨來源','找感染源、治療原發病']},
+    low:{causes:['病毒感染','敗血症耗竭','化療/藥物、骨髓抑制','自體免疫'],
+         mgmt:['評估嗜中性球絕對值(ANC)','嚴重低下:感染防護,必要時 G-CSF']},
+    note:'務必結合 differential;嗜中性球低下(ANC < 500)感染風險明顯上升。'},
+  {id:'hb',name:'血色素',en:'Hb',panel:'CBC',unit:'g/dL',ref:[12,16],critical:{low:7,high:20},
+    high:{causes:['真性紅血球增多症','脫水(相對性、假性)','慢性缺氧代償(COPD、高海拔)'],
+          mgmt:['區分真性 vs 相對性','治療原發病因']},
+    low:{causes:['缺鐵、慢性病貧血','急慢性失血','溶血','B12/葉酸缺乏','骨髓疾病'],
+         mgmt:['依 MCV 分類找病因','治療原發病,必要時依症狀與閾值輸血']},
+    note:'貧血先看 MCV 分小球/正球/大球性,再循線鑑別病因。'},
+  {id:'mcv',name:'平均紅血球容積',en:'MCV',panel:'CBC',unit:'fL',ref:[80,100],critical:null,
+    high:{causes:['大球性:B12/葉酸缺乏','酒精、肝病','甲狀腺功能低下','骨髓異常增生(MDS)'],
+          mgmt:['驗 B12/葉酸','評估酒精、肝、甲狀腺功能']},
+    low:{causes:['小球性:缺鐵性貧血','地中海貧血','慢性病貧血(可正常或偏小)'],
+         mgmt:['驗鐵、ferritin','地中海貧血篩檢(血紅素電泳)']},
+    note:'MCV 是貧血分類核心:< 80 小球性、80–100 正球性、> 100 大球性。'},
+  {id:'plt',name:'血小板',en:'PLT',panel:'CBC',unit:'×10³/µL',ref:[150,400],critical:{low:20,high:1000},
+    high:{causes:['反應性:發炎、感染、缺鐵、脾切除','原發性血小板增多/骨髓增生'],
+          mgmt:['多為反應性、治療原發病','原發性評估血栓風險']},
+    low:{causes:['ITP','TTP/HUS、DIC(消耗)','脾隔離','骨髓抑制、化療、藥物','敗血症'],
+         mgmt:['< 20 出血風險高、避免侵入性處置','找原因:抹片、凝血、藥物史','必要時輸血小板(TTP 為禁忌)']},
+    note:'< 20×10³ 自發性出血風險上升;TTP 不可輸血小板(會惡化血栓)。'},
 ];
 
-const PANELS=['電解質']; // 之後擴充:腎功能、肝功能、CBC、ABG…
+const PANELS=['全部','電解質','腎功能','肝功能','CBC']; // 之後擴充:ABG…
 // ==========================================================================
 
 const cardsEl=document.getElementById('cards'),countEl=document.getElementById('count');
-let panel='電解質',query='';
+let panel='全部',query='';
 
-function fmtRef(r){return r?`${r[0]}–${r[1]}`:'—';}
+function fmtRef(r){
+  if(!r)return'—';
+  if(r[0]==null)return`≤ ${r[1]}`;
+  if(r[1]==null)return`≥ ${r[0]}`;
+  return `${r[0]}–${r[1]}`;
+}
 function fmtCrit(c,u){if(!c)return'';
   const ps=[];if(c.low!=null)ps.push(`< ${c.low}`);if(c.high!=null)ps.push(`> ${c.high}`);
   return ps.length?`critical ${ps.join(' / ')} ${u}`:'';}
@@ -157,7 +234,7 @@ function dirBlock(d,o){
 function render(){
   const q=query.trim().toLowerCase();
   const list=LABS.filter(l=>{
-    if(panel&&l.panel!==panel)return false;
+    if(panel!=='全部'&&l.panel!==panel)return false;
     if(!q)return true;
     const hay=[l.name,l.en,l.panel,...(l.high?[...l.high.causes,...l.high.mgmt]:[]),
       ...(l.low?[...l.low.causes,...l.low.mgmt]:[]),l.note||''].join(' ').toLowerCase();
@@ -170,7 +247,7 @@ function render(){
     const link=l.link?`<a class="link" href="${l.link.href}">${l.link.label}</a>`:'';
     return `<article class="card" data-id="${l.id}">
       <button class="chead" aria-expanded="false">
-        <span class="nm">${l.name}<small>${l.en} · ${l.unit}</small></span>
+        <span class="nm">${l.name}<small>${l.panel} · ${l.en} · ${l.unit}</small></span>
         <span class="headmeta">
           <span class="ref"><span class="reflabel">參考 </span>${fmtRef(l.ref)}</span>
           ${crit?`<span class="crit">${crit}</span>`:''}
