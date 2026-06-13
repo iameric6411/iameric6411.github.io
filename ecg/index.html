@@ -94,6 +94,9 @@
 
   footer{margin-top:22px;font-size:11.5px;color:#465751;line-height:1.6}
 </style>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#070a0d">
+<link rel="icon" href="/icon-192.png" type="image/png">
 </head>
 <body>
 <div class="wrap">
@@ -365,6 +368,7 @@ window.addEventListener('hashchange',()=>{const i=fromHash();if(i)setIon(i);});
 drawGrid();setIon(fromHash()||'K');
 if(reduce)drawStatic();else requestAnimationFrame(frame);
 </script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))}</script>
 <script data-goatcounter="https://iameric6411.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 </body>

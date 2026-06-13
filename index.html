@@ -28,12 +28,17 @@
   .shint kbd{background:#0c1217;border:1px solid #1b2832;border-bottom-width:2px;border-radius:4px;
     padding:1px 6px;font-family:var(--mono);font-size:10.5px;color:#cdded6}
 
-  .grid{display:grid;gap:14px}
-  a.card{display:block;background:var(--card);border:1px solid var(--border);border-radius:12px;
-    padding:16px 18px;text-decoration:none;color:var(--ink);transition:.18s border-color}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+  a.card{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);transition:.18s border-color}
   a.card:hover{border-color:#27513c}
-  .card .name{font-size:15px;font-weight:700;margin:0 0 4px}
-  .card .desc{font-size:12.5px;color:var(--muted);margin:0}
+  .card .ico{flex:0 0 auto;width:38px;height:38px;border-radius:9px;background:#0a0f14;border:1px solid #1b2832;
+    display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;
+    letter-spacing:.5px;color:var(--accent)}
+  .card .body{flex:1;min-width:0}
+  .card .name{font-size:14.5px;font-weight:700;margin:0 0 2px;line-height:1.3}
+  .card .tag{font-family:var(--mono);font-size:10.5px;color:var(--accent);margin:0 0 4px;letter-spacing:.3px}
+  .card .desc{font-size:11.5px;color:var(--muted);margin:0;line-height:1.5}
 
   .results{display:none}
   .results.show{display:block}
@@ -55,6 +60,9 @@
 
   footer{margin-top:32px;font-size:11.5px;color:#465751;line-height:1.6}
 </style>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#070a0d">
+<link rel="icon" href="/icon-192.png" type="image/png">
 </head>
 <body>
 <div class="wrap">
@@ -73,33 +81,58 @@
 
   <div class="grid" id="grid">
     <a class="card" href="ecg/">
-      <p class="name">電解質心電圖對照模擬器</p>
-      <p class="desc">切換離子(K⁺ / Ca²⁺)、拖動濃度,觀察波形由低 → 正常 → 高的連續變化</p>
+      <span class="ico">ECG</span>
+      <div class="body">
+        <p class="tag">模擬器 · K⁺ / Ca²⁺</p>
+        <p class="name">電解質心電圖對照</p>
+        <p class="desc">拖動離子濃度,即時描繪低 / 正常 / 高的波形變化</p>
+      </div>
     </a>
     <a class="card" href="acls/">
-      <p class="name">ACLS 心律辨識對照頁</p>
-      <p class="desc">依急救演算法分四類(可電擊 / 不可電擊 / 心搏過緩 / 心搏過速),點選任一節律即時描繪波形與處置重點</p>
+      <span class="ico">⚡</span>
+      <div class="body">
+        <p class="tag">監視器 · 15 種節律</p>
+        <p class="name">ACLS 心律辨識</p>
+        <p class="desc">可電擊 / 不可電擊 / 心搏過緩 / 過速 四大類,即時波形 + 處置重點</p>
+      </div>
     </a>
     <a class="card" href="flow/">
-      <p class="name">心電圖判讀流程 · 互動決策樹</p>
-      <p class="desc">依序回答「規律嗎?→ QRS 寬窄?→ P 波?」一路導向對應節律,並可直接連入 ACLS 監視器看波形與處置</p>
+      <span class="ico">⫶</span>
+      <div class="body">
+        <p class="tag">判讀流程 · 決策樹</p>
+        <p class="name">心電圖判讀流程</p>
+        <p class="desc">規律 → QRS → P 波,循線到對應節律 → ACLS 監視器</p>
+      </div>
     </a>
     <a class="card" href="labs/">
-      <p class="name">實驗室檢查對照</p>
-      <p class="desc">可搜尋的檢驗參考卡,展開「↑高 / ↓低 → 原因·處置」與 critical 值;含電解質、腎/肝功能、CBC、凝血、心肌酵素、發炎、血糖內分泌,附 corrected Ca／anion gap 計算機</p>
+      <span class="ico">Lab</span>
+      <div class="body">
+        <p class="tag">29 檢驗 · 6 計算機</p>
+        <p class="name">實驗室檢查對照</p>
+        <p class="desc">可搜尋的檢驗卡(↑ ↓ 原因 / 處置 / pitfall),含 eGFR、FENa、AG、TSat 等計算機</p>
+      </div>
     </a>
     <a class="card" href="abg/">
-      <p class="name">動脈血氣 · 酸鹼判讀器</p>
-      <p class="desc">輸入 pH／PaCO₂／HCO₃,逐步判讀原發障礙、Winter's 代償、陰離子間隙與 delta-delta,附常見臨床範例</p>
+      <span class="ico">pH</span>
+      <div class="body">
+        <p class="tag">判讀流程 · 5 步驟</p>
+        <p class="name">動脈血氣酸鹼判讀</p>
+        <p class="desc">pH → 原發 → 代償 → AG → delta-delta,附 5 個臨床範例</p>
+      </div>
     </a>
     <a class="card" href="anemia/">
-      <p class="name">貧血判讀 · MCV 決策樹</p>
-      <p class="desc">依 MCV(小球／正球／大球)循線找病因與下一步檢查,整合鐵相關、網狀紅血球、B12／葉酸的鑑別邏輯</p>
+      <span class="ico">Hb</span>
+      <div class="body">
+        <p class="tag">判讀流程 · MCV</p>
+        <p class="name">貧血鑑別決策樹</p>
+        <p class="desc">小球 / 正球 / 大球循線找病因 + 下一步檢查</p>
+      </div>
     </a>
   </div>
 
   <footer>
-    本站內容為教學示意用,非真實臨床描記,臨床判讀請以真實數據為準。
+    本站內容為教學示意用,非真實臨床描記,臨床判讀請以真實數據為準。<br>
+    <span style="color:#3a4842">v0.5 · 更新 2026-06-13 · <a href="https://github.com/iameric6411/iameric6411.github.io/issues" style="color:#5a6d65">回報問題 / 建議</a></span>
   </footer>
 </div>
 
@@ -175,6 +208,7 @@ Promise.all([
   searchEl.disabled=true;
 });
 </script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))}</script>
 <script data-goatcounter="https://iameric6411.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 </body>
