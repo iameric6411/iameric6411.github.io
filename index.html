@@ -7,20 +7,52 @@
 <style>
   :root{
     --bg:#070a0d;--card:#0c1217;--border:#182530;
-    --ink:#e7f3ee;--muted:#7f9489;
+    --ink:#e7f3ee;--muted:#7f9489;--ghost:#46584f;--accent:#2bd07a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
     --sans:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
-  .wrap{max-width:760px;margin:0 auto;padding:40px 18px 56px}
+  .wrap{max-width:760px;margin:0 auto;padding:34px 18px 56px}
   h1{font-size:20px;font-weight:700;letter-spacing:.3px;margin:0 0 6px}
-  .sub{font-size:13px;color:var(--muted);margin:0 0 28px}
+  .sub{font-size:13px;color:var(--muted);margin:0 0 22px}
+
+  .searchwrap{position:relative;margin:0 0 6px}
+  .search{width:100%;background:var(--card);border:1px solid var(--border);border-radius:11px;
+    padding:14px 16px 14px 42px;color:var(--ink);font-family:var(--sans);font-size:14.5px;outline:none;
+    transition:.18s border-color}
+  .search:focus{border-color:#27513c}
+  .searchwrap:before{content:"⌕";position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    color:var(--ghost);font-family:var(--mono);font-size:18px;pointer-events:none}
+  .shint{font-family:var(--mono);font-size:11px;color:var(--ghost);margin:8px 2px 22px;line-height:1.5}
+  .shint kbd{background:#0c1217;border:1px solid #1b2832;border-bottom-width:2px;border-radius:4px;
+    padding:1px 6px;font-family:var(--mono);font-size:10.5px;color:#cdded6}
+
   .grid{display:grid;gap:14px}
   a.card{display:block;background:var(--card);border:1px solid var(--border);border-radius:12px;
     padding:16px 18px;text-decoration:none;color:var(--ink);transition:.18s border-color}
   a.card:hover{border-color:#27513c}
   .card .name{font-size:15px;font-weight:700;margin:0 0 4px}
   .card .desc{font-size:12.5px;color:var(--muted);margin:0}
+
+  .results{display:none}
+  .results.show{display:block}
+  .grid.hide{display:none}
+  .rgroup{margin-bottom:18px}
+  .rgrouphd{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:1px;color:var(--accent);
+    text-transform:uppercase;margin:0 0 8px;padding-left:2px}
+  .rgroupcnt{color:var(--ghost);font-weight:400;margin-left:6px}
+  .ritem{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);
+    border-radius:10px;padding:12px 14px;text-decoration:none;color:var(--ink);margin-bottom:7px;transition:.15s}
+  .ritem:hover{border-color:var(--accent);transform:translateX(2px)}
+  .rmain{flex:1;min-width:0}
+  .rtitle{font-size:14px;font-weight:600;margin:0 0 2px}
+  .rtitle mark{background:#2bd07a44;color:var(--ink);padding:0 2px;border-radius:3px}
+  .rsub{font-family:var(--mono);font-size:11px;color:var(--muted);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rarrow{font-family:var(--mono);font-size:14px;color:var(--ghost);flex:0 0 auto}
+  .ritem:hover .rarrow{color:var(--accent)}
+  .rempty{font-family:var(--mono);font-size:12.5px;color:var(--ghost);padding:30px 4px}
+
   footer{margin-top:32px;font-size:11.5px;color:#465751;line-height:1.6}
 </style>
 </head>
@@ -28,40 +60,121 @@
 <div class="wrap">
   <header>
     <h1>互動教材總覽</h1>
-    <p class="sub">點選下方項目進入各互動教材</p>
+    <p class="sub">點下方卡片進入,或直接搜尋檢驗、節律、計算機。</p>
   </header>
 
-  <div class="grid">
+  <div class="searchwrap">
+    <input class="search" id="search" type="search" autofocus
+      placeholder="搜尋:鉀 / K / potassium · AG · VF · 貧血 · ABG…" aria-label="全站搜尋">
+  </div>
+  <p class="shint">支援中英別名、縮寫 · 例:打 <kbd>鉀</kbd> 或 <kbd>K</kbd> 跳到鉀的卡片 · 打 <kbd>VF</kbd> 跳到 ACLS 心室顫動 · 打 <kbd>AG</kbd> 跳到陰離子間隙計算機</p>
+
+  <div class="results" id="results"></div>
+
+  <div class="grid" id="grid">
     <a class="card" href="ecg/">
       <p class="name">電解質心電圖對照模擬器</p>
-      <p class="desc">切換離子（K⁺ / Ca²⁺）、拖動濃度，觀察波形由低 → 正常 → 高的連續變化</p>
+      <p class="desc">切換離子(K⁺ / Ca²⁺)、拖動濃度,觀察波形由低 → 正常 → 高的連續變化</p>
     </a>
     <a class="card" href="acls/">
       <p class="name">ACLS 心律辨識對照頁</p>
-      <p class="desc">依急救演算法分四類（可電擊 / 不可電擊 / 心搏過緩 / 心搏過速），點選任一節律即時描繪波形與處置重點</p>
+      <p class="desc">依急救演算法分四類(可電擊 / 不可電擊 / 心搏過緩 / 心搏過速),點選任一節律即時描繪波形與處置重點</p>
     </a>
     <a class="card" href="flow/">
       <p class="name">心電圖判讀流程 · 互動決策樹</p>
-      <p class="desc">依序回答「規律嗎？→ QRS 寬窄？→ P 波？」一路導向對應節律，並可直接連入 ACLS 監視器看波形與處置</p>
+      <p class="desc">依序回答「規律嗎?→ QRS 寬窄?→ P 波?」一路導向對應節律,並可直接連入 ACLS 監視器看波形與處置</p>
     </a>
     <a class="card" href="labs/">
       <p class="name">實驗室檢查對照</p>
-      <p class="desc">可搜尋的檢驗參考卡，展開「↑高 / ↓低 → 原因·處置」與 critical 值；含電解質、腎/肝功能、CBC、凝血、心肌酵素、發炎、血糖內分泌，附 corrected Ca／anion gap 計算機</p>
+      <p class="desc">可搜尋的檢驗參考卡,展開「↑高 / ↓低 → 原因·處置」與 critical 值;含電解質、腎/肝功能、CBC、凝血、心肌酵素、發炎、血糖內分泌,附 corrected Ca／anion gap 計算機</p>
     </a>
     <a class="card" href="abg/">
       <p class="name">動脈血氣 · 酸鹼判讀器</p>
-      <p class="desc">輸入 pH／PaCO₂／HCO₃，逐步判讀原發障礙、Winter's 代償、陰離子間隙與 delta-delta，附常見臨床範例</p>
+      <p class="desc">輸入 pH／PaCO₂／HCO₃,逐步判讀原發障礙、Winter's 代償、陰離子間隙與 delta-delta,附常見臨床範例</p>
     </a>
     <a class="card" href="anemia/">
       <p class="name">貧血判讀 · MCV 決策樹</p>
-      <p class="desc">依 MCV（小球／正球／大球）循線找病因與下一步檢查，整合鐵相關、網狀紅血球、B12／葉酸的鑑別邏輯</p>
+      <p class="desc">依 MCV(小球／正球／大球)循線找病因與下一步檢查,整合鐵相關、網狀紅血球、B12／葉酸的鑑別邏輯</p>
     </a>
   </div>
 
   <footer>
-    本站內容為教學示意用，非真實臨床描記，臨床判讀請以真實數據為準。
+    本站內容為教學示意用,非真實臨床描記,臨床判讀請以真實數據為準。
   </footer>
 </div>
+
+<script>
+// ============= 全站搜尋 ==============================================
+// 合併 data/labs.json + data/search-extras.json 做即時過濾。
+// 每筆統一形:{kind,title,sub,url,aliases[]}
+const KINDS=['檢驗','節律','計算機','流程','模擬器'];  // 顯示順序
+let INDEX=[];
+
+const grid=document.getElementById('grid');
+const results=document.getElementById('results');
+const searchEl=document.getElementById('search');
+
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function highlight(text,q){
+  if(!q)return escapeHtml(text);
+  const i=text.toLowerCase().indexOf(q.toLowerCase());
+  if(i<0)return escapeHtml(text);
+  return escapeHtml(text.slice(0,i))+'<mark>'+escapeHtml(text.slice(i,i+q.length))+'</mark>'+escapeHtml(text.slice(i+q.length));
+}
+
+function render(q){
+  q=q.trim();
+  if(!q){results.classList.remove('show');grid.classList.remove('hide');results.innerHTML='';return;}
+  grid.classList.add('hide');results.classList.add('show');
+  const ql=q.toLowerCase();
+  const hits=INDEX.filter(it=>{
+    const hay=[it.title,it.sub,...(it.aliases||[])].join(' ').toLowerCase();
+    return hay.includes(ql);
+  });
+  if(!hits.length){results.innerHTML='<p class="rempty">找不到符合「'+escapeHtml(q)+'」的項目。試試別名:potassium、Cr、AG、VF…</p>';return;}
+  const byKind={};
+  for(const it of hits){(byKind[it.kind]=byKind[it.kind]||[]).push(it);}
+  results.innerHTML=KINDS.filter(k=>byKind[k]).map(k=>{
+    const items=byKind[k];
+    return '<div class="rgroup"><p class="rgrouphd">'+k+'<span class="rgroupcnt">'+items.length+' 項</span></p>'+
+      items.map(it=>(
+        '<a class="ritem" href="'+it.url+'">'+
+          '<div class="rmain">'+
+            '<p class="rtitle">'+highlight(it.title,q)+'</p>'+
+            '<p class="rsub">'+escapeHtml(it.sub||'')+'</p>'+
+          '</div>'+
+          '<span class="rarrow">→</span>'+
+        '</a>'
+      )).join('')+'</div>';
+  }).join('');
+}
+
+searchEl.addEventListener('input',e=>render(e.target.value));
+searchEl.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const first=results.querySelector('.ritem');if(first)first.click();}
+});
+
+Promise.all([
+  fetch('data/labs.json',{cache:'no-cache'}).then(r=>r.json()),
+  fetch('data/search-extras.json',{cache:'no-cache'}).then(r=>r.json()),
+]).then(([labs,extras])=>{
+  const labItems=labs.map(l=>({
+    kind:'檢驗',
+    title:l.name+' '+l.en,
+    sub:l.panel+' · 參考 '+(l.ref?(l.ref[0]==null?'≤ '+l.ref[1]:l.ref[1]==null?'≥ '+l.ref[0]:l.ref[0]+'–'+l.ref[1])+' '+l.unit:l.unit),
+    url:'labs/#'+l.id,
+    aliases:l.aliases||[],
+  }));
+  INDEX=[...labItems,...extras];
+  // 若進站時 search 已有預填值(瀏覽器自動恢復),立即過濾
+  if(searchEl.value)render(searchEl.value);
+}).catch(e=>{
+  console.error(e);
+  // 載入失敗只是退化:搜尋無法用,但底下卡片仍可點
+  searchEl.placeholder='搜尋索引載入失敗,可直接點下方卡片進入';
+  searchEl.disabled=true;
+});
+</script>
 <script data-goatcounter="https://iameric6411.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 </body>
