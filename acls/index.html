@@ -58,12 +58,19 @@
   .act p{margin:0;font-size:13.5px;line-height:1.65;color:#cdded6}
 
   footer{margin-top:22px;font-size:11.5px;color:#465751;line-height:1.6}
+
+  .crumb{position:sticky;top:0;z-index:20;background:rgba(7,10,13,.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid #131d22;padding:10px 18px;font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.3}
+  .crumb a{color:#5fd8ac;text-decoration:none}
+  .crumb a:hover{color:var(--ink)}
+  .crumb .cur{color:var(--ink)}
 </style>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#070a0d">
 <link rel="icon" href="/icon-192.png" type="image/png">
 </head>
 <body>
+<nav class="crumb"><a href="../">← 首頁</a> · <span class="cur">ACLS 心律辨識</span></nav>
+
 <div class="wrap">
   <div><h1>ACLS 心律辨識對照頁</h1>
   <p class="sub">依急救演算法分四類 · 點選任一節律即時描繪 · 點畫面可暫停 · <a href="../flow/" style="color:#5fd8ac">心電圖判讀流程 →</a></p></div>
