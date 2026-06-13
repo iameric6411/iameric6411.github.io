@@ -51,6 +51,10 @@
   .caret{color:var(--ghost);font-family:var(--mono);font-size:13px;transition:.2s;flex:0 0 auto}
   .card.open .caret{transform:rotate(90deg);color:var(--muted)}
 
+  .quick{padding:10px 16px;background:#0a0f14;border-top:1px solid #131d22;
+    font-family:var(--mono);font-size:12px;color:#9fb1a8;line-height:1.55}
+  .quick:before{content:"▶";color:var(--safe);margin-right:8px;font-size:10px}
+  .refsplit{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:5px}
   .cbody{display:none;padding:0 16px 16px;border-top:1px solid #131d22}
   .card.open .cbody{display:block}
   .dir{margin-top:14px}
@@ -218,6 +222,10 @@ function fmtRef(r){
   if(r[1]==null)return`≥ ${r[0]}`;
   return `${r[0]}–${r[1]}`;
 }
+function fmtRefFull(l){
+  if(l.refMale&&l.refFemale)return `男 ${fmtRef(l.refMale)} <span class="refsplit">· 女 ${fmtRef(l.refFemale)}</span>`;
+  return fmtRef(l.ref);
+}
 function fmtCrit(c,u){if(!c)return'';
   const ps=[];if(c.low!=null)ps.push(`< ${c.low}`);if(c.high!=null)ps.push(`> ${c.high}`);
   return ps.length?`critical ${ps.join(' / ')} ${u}`:'';}
@@ -258,7 +266,7 @@ function render(){
     const hay=[l.name,l.en,l.panel,...(l.aliases||[]),
       ...(l.high?[...l.high.causes,...l.high.mgmt]:[]),
       ...(l.low?[...l.low.causes,...l.low.mgmt]:[]),
-      ...(l.pitfall||[]),l.note||''].join(' ').toLowerCase();
+      ...(l.pitfall||[]),l.quick||'',l.note||''].join(' ').toLowerCase();
     return hay.includes(q);
   });
   // 釘選的排在最上(保持原順序)
@@ -275,13 +283,14 @@ function render(){
         <button class="chead" aria-expanded="${isOpen}">
           <span class="nm">${l.name}<small>${l.panel} · ${l.en} · ${l.unit}</small></span>
           <span class="headmeta">
-            <span class="ref"><span class="reflabel">參考 </span>${fmtRef(l.ref)}</span>
+            <span class="ref"><span class="reflabel">參考 </span>${fmtRefFull(l)}</span>
             ${crit?`<span class="crit">${crit}</span>`:''}
             <span class="caret">▸</span>
           </span>
         </button>
         <button class="pin${isPin?' on':''}" data-pin="${l.id}" aria-label="${isPin?'取消釘選':'釘選'}" title="${isPin?'取消釘選':'釘選'}">${isPin?'★':'☆'}</button>
       </div>
+      ${l.quick?`<div class="quick">${l.quick}</div>`:''}
       <div class="cbody">
         ${dirBlock('hi',l.high)}
         ${dirBlock('lo',l.low)}
