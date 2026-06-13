@@ -129,175 +129,9 @@
 </div>
 
 <script>
-// ===== 資料層:新增檢驗只要往這裡加一筆 =====================================
-// 每筆:id,name,panel,unit,ref:[low,high],critical:{low,high},
-//      high/low:{causes:[],mgmt:[]},note?,link?(連到其他互動頁)
-const LABS=[
-  {id:'na',name:'血鈉',en:'Na⁺',panel:'電解質',unit:'mEq/L',ref:[135,145],critical:{low:120,high:160},
-    high:{causes:['水分不足/脫水','尿崩症(DI)','不顯性失水增加','攝水不足(老人、無法取水)','高張鈉攝入'],
-          mgmt:['補充水分,慢速矯正 < 10–12 mEq/L/日(避免腦水腫)','中樞型 DI 給 desmopressin']},
-    low:{causes:['SIADH','水腫狀態(心衰、肝硬化、腎病症候群)','利尿劑(thiazide)','低血容失鈉','原發性多渴'],
-         mgmt:['依血容與症狀處理:SIADH 限水','嚴重症狀性給 3% saline','慢速矯正避免 osmotic demyelination']},
-    note:'判讀前先評估血容與血漿滲透壓;矯正速度比絕對數值更關鍵。'},
-  {id:'k',name:'血鉀',en:'K⁺',panel:'電解質',unit:'mEq/L',ref:[3.5,5.0],critical:{low:2.5,high:6.5},
-    high:{causes:['腎衰竭/排泄下降','酸中毒(細胞內外轉移)','溶血、橫紋肌溶解、腫瘤溶解','保鉀利尿劑、ACEI/ARB','假性高鉀(溶血檢體)'],
-          mgmt:['IV calcium gluconate 穩定心肌膜','insulin + glucose、nebulized β2 agonist','Kayexalate、利尿、透析','持續心電監測']},
-    low:{causes:['利尿劑','嘔吐、腹瀉','低血鎂','鹼中毒、insulin'],
-         mgmt:['補充 KCl(口服或 IV 限速)','併矯正低血鎂否則難回升']},
-    note:'高低血鉀都會反映在心電圖(帳篷狀 T、U 波、QRS 增寬…)。',link:{href:'../ecg/#K',label:'→ 看血鉀心電圖變化'}},
-  {id:'cl',name:'血氯',en:'Cl⁻',panel:'電解質',unit:'mEq/L',ref:[98,107],critical:null,
-    high:{causes:['正常陰離子間隙代謝性酸中毒','大量生理食鹽水輸注','脫水'],
-          mgmt:['治療原發病因','檢視輸液種類']},
-    low:{causes:['嘔吐(失 HCl)、鼻胃管引流','利尿劑','代謝性鹼中毒'],
-         mgmt:['補液矯正','治療原發病因']},
-    note:'常與酸鹼、陰離子間隙一起判讀,單看意義有限。'},
-  {id:'ca',name:'血鈣(總)',en:'Ca²⁺',panel:'電解質',unit:'mg/dL',ref:[8.5,10.5],critical:{low:6.0,high:13.0},
-    high:{causes:['原發性副甲狀腺亢進','惡性腫瘤(PTHrP、骨轉移)','維生素 D 過多','結節病、長期臥床'],
-          mgmt:['IV normal saline 輸液促進排鈣','loop diuretic(水化足夠後)','bisphosphonate、calcitonin','治療原發病因']},
-    low:{causes:['副甲狀腺功能低下','慢性腎臟病','維生素 D 不足','低血鎂','急性胰臟炎'],
-         mgmt:['補鈣(口服或 IV calcium gluconate)','矯正低血鎂','補充維生素 D']},
-    note:'低白蛋白會低估總鈣,需校正:corrected Ca = 測得值 + 0.8×(4 − albumin);必要時測 ionized Ca。',
-    link:{href:'../ecg/#Ca',label:'→ 看血鈣心電圖變化'}},
-  {id:'mg',name:'血鎂',en:'Mg²⁺',panel:'電解質',unit:'mg/dL',ref:[1.7,2.2],critical:{low:1.0,high:4.9},
-    high:{causes:['腎衰竭','過量補鎂(子癇前症治療、含鎂制酸劑/瀉劑)'],
-          mgmt:['停止鎂來源','IV calcium 拮抗','嚴重或腎衰竭 → 透析'],},
-    low:{causes:['利尿劑','慢性酒精','腹瀉/吸收不良','長期 PPI'],
-         mgmt:['補充鎂','常為難治性低鉀/低鈣的根因,需先補鎂']},
-    note:'高血鎂:深部肌腱反射消失、低血壓、呼吸抑制是警訊。'},
-  {id:'phos',name:'血磷',en:'PO₄',panel:'電解質',unit:'mg/dL',ref:[2.5,4.5],critical:null,
-    high:{causes:['腎衰竭','腫瘤溶解、橫紋肌溶解','副甲狀腺功能低下'],
-          mgmt:['phosphate binder','治療原發病因、透析','注意伴隨低血鈣']},
-    low:{causes:['再餵食症候群(refeeding)','DKA 治療過程','慢性酒精','呼吸性鹼中毒'],
-         mgmt:['補充磷','再餵食高風險者預防性監測與補充']},
-    note:'再餵食症候群:低磷、低鉀、低鎂同時發生,補充營養前後須監測。'},
-
-  // ===== 腎功能 =====
-  {id:'bun',name:'尿素氮',en:'BUN',panel:'腎功能',unit:'mg/dL',ref:[7,20],critical:null,
-    high:{causes:['腎前性:脫水、心衰、出血、休克','腎性:急性腎損傷、慢性腎臟病','上消化道出血、高蛋白飲食','類固醇、分解代謝增加'],
-          mgmt:['依 BUN/Cr 比區分腎前/腎性','補液矯正腎前性','治療原發腎病']},
-    low:{causes:['肝衰竭(尿素合成下降)','營養不良/低蛋白','過度水化、懷孕'],
-         mgmt:['治療原發病因']},
-    note:'BUN/Cr 比 > 20 提示腎前性(脫水、出血);約 10–15 提示腎性,過低見於肝病。'},
-  {id:'cr',name:'肌酸酐',en:'Cr',panel:'腎功能',unit:'mg/dL',ref:[0.6,1.3],critical:null,
-    high:{causes:['急性腎損傷、慢性腎臟病','腎血流下降','橫紋肌溶解','腎毒性藥物(NSAID、aminoglycoside、顯影劑)','肌肉量大'],
-          mgmt:['停腎毒性藥、調整劑量','補液、治療原發病因','計算 eGFR 評估分期']},
-    low:{causes:['肌肉量少、惡病質','懷孕(GFR 上升)'],
-         mgmt:['多無臨床意義,結合臨床判讀']},
-    note:'受肌肉量、年齡、性別影響;急性變化看「趨勢」比單點數值更重要。'},
-  {id:'egfr',name:'估算腎絲球過濾率',en:'eGFR',panel:'腎功能',unit:'mL/min/1.73m²',ref:[90,null],critical:null,
-    low:{causes:['慢性腎臟病(CKD)','急性腎損傷','腎血流下降'],
-         mgmt:['依分期處置、避免腎毒性藥物','控制血壓/血糖、依腎功能調整藥物劑量','G4–G5 轉介腎臟科、評估透析時機']},
-    note:'CKD 分期:G1 ≥90、G2 60–89、G3a 45–59、G3b 30–44、G4 15–29、G5 < 15,須配合白蛋白尿分級判讀。'},
-
-  // ===== 肝功能 =====
-  {id:'ast',name:'天門冬胺酸轉胺酶',en:'AST/GOT',panel:'肝功能',unit:'U/L',ref:[10,40],critical:null,
-    high:{causes:['肝細胞損傷:病毒性肝炎、藥物、缺血','酒精性肝病(AST/ALT > 2)','非肝源:心肌梗塞、肌肉損傷、溶血'],
-          mgmt:['找肝損傷原因、停肝毒性藥/戒酒','與 ALT 一起判讀來源']},
-    note:'非肝特異,也存在於心肌與骨骼肌,需與 ALT 對照。'},
-  {id:'alt',name:'丙胺酸轉胺酶',en:'ALT/GPT',panel:'肝功能',unit:'U/L',ref:[7,40],critical:null,
-    high:{causes:['病毒性肝炎','脂肪肝(NAFLD)','藥物性肝損傷','酒精'],
-          mgmt:['依原因處理、戒酒、停肝毒性藥','追蹤肝功能趨勢']},
-    note:'較 AST 肝特異。ALT > AST 多見於病毒性/脂肪肝;AST/ALT > 2 提示酒精性肝病。'},
-  {id:'alp',name:'鹼性磷酸酶',en:'ALP',panel:'肝功能',unit:'U/L',ref:[40,130],critical:null,
-    high:{causes:['膽道阻塞/膽汁鬱積','骨病變:生長期、骨折、Paget 病、骨轉移','懷孕(胎盤來源)'],
-          mgmt:['配合 GGT 區分肝源 vs 骨源','影像評估膽道']},
-    note:'GGT 同時升高 → 肝膽來源;GGT 正常而 ALP 高 → 骨源或生理性。'},
-  {id:'ggt',name:'γ-麩胺醯轉移酶',en:'GGT',panel:'肝功能',unit:'U/L',ref:[10,60],critical:null,
-    high:{causes:['膽汁鬱積、膽道疾病','酒精','酵素誘導藥物(如 phenytoin)'],
-          mgmt:['確認 ALP 升高是否肝膽源','評估酒精使用']},
-    note:'最常用來判斷 ALP 升高是否來自肝膽系統。'},
-  {id:'tbil',name:'總膽紅素',en:'T.Bil',panel:'肝功能',unit:'mg/dL',ref:[0.3,1.2],critical:null,
-    high:{causes:['間接(未結合)為主:溶血、Gilbert、新生兒','直接(結合)為主:膽道阻塞、肝內膽汁鬱積','肝細胞性:混合上升'],
-          mgmt:['測 direct/indirect 分流','溶血 vs 阻塞 vs 肝細胞鑑別','影像評估膽道']},
-    note:'直接膽紅素佔總量 > 50% → 阻塞/肝細胞性;以間接為主 → 溶血或 Gilbert。'},
-  {id:'alb',name:'白蛋白',en:'Alb',panel:'肝功能',unit:'g/dL',ref:[3.5,5.0],critical:null,
-    high:{causes:['脫水(血液濃縮、假性升高)'],
-          mgmt:['補液、無特異處置']},
-    low:{causes:['慢性肝病(合成下降)','腎病症候群(流失)','營養不良','發炎(負向急性期蛋白)'],
-         mgmt:['治療原發病因、營養支持','解讀蛋白結合物(如校正鈣)需一併考量']},
-    note:'低白蛋白會低估總鈣 → 需校正鈣;也影響藥物的蛋白結合。'},
-
-  // ===== CBC =====
-  {id:'wbc',name:'白血球',en:'WBC',panel:'CBC',unit:'×10³/µL',ref:[4,11],critical:{low:2.0,high:50},
-    high:{causes:['細菌感染、發炎','壓力/類固醇/腎上腺素','白血病、骨髓增生','抽菸、脾切除後'],
-          mgmt:['看 differential 分辨來源','找感染源、治療原發病']},
-    low:{causes:['病毒感染','敗血症耗竭','化療/藥物、骨髓抑制','自體免疫'],
-         mgmt:['評估嗜中性球絕對值(ANC)','嚴重低下:感染防護,必要時 G-CSF']},
-    note:'務必結合 differential;嗜中性球低下(ANC < 500)感染風險明顯上升。'},
-  {id:'hb',name:'血色素',en:'Hb',panel:'CBC',unit:'g/dL',ref:[12,16],critical:{low:7,high:20},
-    high:{causes:['真性紅血球增多症','脫水(相對性、假性)','慢性缺氧代償(COPD、高海拔)'],
-          mgmt:['區分真性 vs 相對性','治療原發病因']},
-    low:{causes:['缺鐵、慢性病貧血','急慢性失血','溶血','B12/葉酸缺乏','骨髓疾病'],
-         mgmt:['依 MCV 分類找病因','治療原發病,必要時依症狀與閾值輸血']},
-    note:'貧血先看 MCV 分小球/正球/大球性,再循線鑑別病因。',link:{href:'../anemia/',label:'→ 貧血 MCV 決策樹'}},
-  {id:'mcv',name:'平均紅血球容積',en:'MCV',panel:'CBC',unit:'fL',ref:[80,100],critical:null,
-    high:{causes:['大球性:B12/葉酸缺乏','酒精、肝病','甲狀腺功能低下','骨髓異常增生(MDS)'],
-          mgmt:['驗 B12/葉酸','評估酒精、肝、甲狀腺功能']},
-    low:{causes:['小球性:缺鐵性貧血','地中海貧血','慢性病貧血(可正常或偏小)'],
-         mgmt:['驗鐵、ferritin','地中海貧血篩檢(血紅素電泳)']},
-    note:'MCV 是貧血分類核心:< 80 小球性、80–100 正球性、> 100 大球性。',link:{href:'../anemia/',label:'→ 貧血 MCV 決策樹'}},
-  {id:'plt',name:'血小板',en:'PLT',panel:'CBC',unit:'×10³/µL',ref:[150,400],critical:{low:20,high:1000},
-    high:{causes:['反應性:發炎、感染、缺鐵、脾切除','原發性血小板增多/骨髓增生'],
-          mgmt:['多為反應性、治療原發病','原發性評估血栓風險']},
-    low:{causes:['ITP','TTP/HUS、DIC(消耗)','脾隔離','骨髓抑制、化療、藥物','敗血症'],
-         mgmt:['< 20 出血風險高、避免侵入性處置','找原因:抹片、凝血、藥物史','必要時輸血小板(TTP 為禁忌)']},
-    note:'< 20×10³ 自發性出血風險上升;TTP 不可輸血小板(會惡化血栓)。'},
-
-  // ===== 凝血 =====
-  {id:'inr',name:'凝血酶原時間 / INR',en:'PT/INR',panel:'凝血',unit:'INR',ref:[0.8,1.2],critical:{high:5},
-    high:{causes:['warfarin / VKA 抗凝','肝病(凝血因子合成下降)','維生素 K 缺乏','DIC、大量輸血稀釋'],
-          mgmt:['warfarin 過量:停藥 ± 口服維生素 K','嚴重出血:PCC(優先)或 FFP + IV 維生素 K','評估出血風險與抗凝適應症']},
-    note:'反映外在 / 共同路徑(因子 II、VII、IX、X);PT 約 11–13.5 秒,warfarin 常見目標 INR 2–3。'},
-  {id:'aptt',name:'活化部分凝血活酶時間',en:'aPTT',panel:'凝血',unit:'秒',ref:[25,35],critical:null,
-    high:{causes:['heparin(UFH)治療','血友病(因子 VIII / IX 缺乏)','von Willebrand 病','抗磷脂抗體 / 狼瘡抗凝物','肝病、DIC'],
-          mgmt:['heparin 監測與調量','延長且出血:找因子缺乏 / 抑制物','狼瘡抗凝物反而促血栓,須臨床判讀']},
-    note:'反映內在 / 共同路徑;「PT 看 warfarin、aPTT 看 heparin」是常用記法。'},
-  {id:'ddimer',name:'D-雙體',en:'D-dimer',panel:'凝血',unit:'µg/mL FEU',ref:[null,0.5],critical:null,
-    high:{causes:['靜脈血栓栓塞(DVT / PE)','DIC','近期手術 / 外傷、感染','懷孕、惡性腫瘤、年長'],
-          mgmt:['高值非特異,需影像確診(CTPA、都卜勒)','低臨床機率 + 陰性可排除 VTE']},
-    note:'高敏感、低特異:適合「排除」低 / 中度可能性的 VTE,不能單獨「確診」。'},
-
-  // ===== 心肌酵素 =====
-  {id:'trop',name:'心肌旋轉蛋白',en:'Troponin',panel:'心肌酵素',unit:'ng/mL',ref:[null,0.04],critical:null,
-    high:{causes:['急性心肌梗塞 / ACS','心肌炎、心衰、快速心律不整','肺栓塞、敗血症','腎衰竭(清除下降)'],
-          mgmt:['結合症狀與心電圖,ACS 走 ACS 流程','看「連續變化(rise / fall)」而非單點','非 ACS 升高需找其他原因']},
-    note:'高敏感 troponin 看 99th percentile 與動態變化;單次升高 ≠ 心肌梗塞(腎衰、敗血、PE 皆可升)。'},
-  {id:'bnp',name:'B 型利鈉肽',en:'BNP',panel:'心肌酵素',unit:'pg/mL',ref:[null,100],critical:null,
-    high:{causes:['心臟衰竭(容積 / 壓力負荷)','腎衰竭','肺栓塞、肺高壓','年長、心房顫動'],
-          mgmt:['評估心衰、利尿與容積處理','結合臨床與心臟超音波']},
-    note:'BNP < 100 使急性心衰可能性低(高陰性預測值);腎衰 / 年長偏高、肥胖偏低。NT-proBNP 數值較高且依年齡調整。'},
-
-  // ===== 發炎 =====
-  {id:'crp',name:'C 反應蛋白',en:'CRP',panel:'發炎',unit:'mg/L',ref:[null,5],critical:null,
-    high:{causes:['細菌感染','組織發炎 / 壞死','自體免疫疾病','惡性腫瘤'],
-          mgmt:['找感染 / 發炎源','追蹤治療反應(下降快)']},
-    note:'比 ESR 反應快(數小時上升、治療後快速下降),適合監測急性發炎與療效。'},
-  {id:'esr',name:'紅血球沉降速率',en:'ESR',panel:'發炎',unit:'mm/hr',ref:[null,20],critical:null,
-    high:{causes:['感染、發炎','自體免疫(巨細胞動脈炎、PMR 常 > 50)','惡性腫瘤、多發性骨髓瘤','懷孕、貧血、年長'],
-          mgmt:['非特異,結合臨床','極高(> 100)聯想 GCA、感染、骨髓瘤、惡性']},
-    note:'上升與下降都慢,受年齡、性別、貧血、懷孕、免疫球蛋白影響(粗估上限:男 年齡/2、女 (年齡+10)/2)。'},
-
-  // ===== 血糖內分泌 =====
-  {id:'glu',name:'血糖(空腹)',en:'Glucose',panel:'血糖內分泌',unit:'mg/dL',ref:[70,99],critical:{low:50,high:500},
-    high:{causes:['糖尿病','壓力、感染、類固醇','DKA / HHS','胰臟疾病'],
-          mgmt:['控糖、找誘因','DKA / HHS 緊急:輸液、IV insulin、監測血鉀']},
-    low:{causes:['insulin / sulfonylurea 過量','進食不足、運動過度','肝衰竭、敗血症','腎上腺功能不全'],
-         mgmt:['給糖:清醒口服、意識不清 IV D50','找並矯正原因','SU / 長效 insulin 低血糖需延長觀察']},
-    note:'診斷糖尿病:空腹 ≥ 126、隨機 ≥ 200 + 症狀、或 HbA1c ≥ 6.5%;空腹 100–125 為糖尿病前期。'},
-  {id:'a1c',name:'糖化血色素',en:'HbA1c',panel:'血糖內分泌',unit:'%',ref:[4,5.6],critical:null,
-    high:{causes:['糖尿病、長期血糖控制不佳','反映近 2–3 個月平均血糖'],
-          mgmt:['調整治療(多數目標 < 7%)、生活型態','個別化目標(年長 / 共病可放寬)']},
-    low:{causes:['溶血性貧血、近期失血 / 輸血','缺鐵治療後紅血球更新快'],
-         mgmt:['有干擾因素時改用其他血糖指標解讀']},
-    note:'反映近 2–3 月平均血糖;溶血、貧血、近期輸血、血紅素變異會使結果失真。'},
-  {id:'tsh',name:'甲狀腺刺激素',en:'TSH',panel:'血糖內分泌',unit:'µIU/mL',ref:[0.4,4.0],critical:null,
-    high:{causes:['原發性甲狀腺功能低下(最常見,如橋本氏)','藥物','次發性少見'],
-          mgmt:['驗 free T4 確認','levothyroxine 補充並追蹤']},
-    low:{causes:['甲狀腺功能亢進(Graves、毒性結節)','過度補充甲狀腺素','次發性低下(腦垂體 / 下視丘)'],
-         mgmt:['驗 free T4 / T3','亢進:抗甲狀腺藥、評估治療']},
-    note:'甲狀腺篩檢首選;原發性:高 TSH → 低下、低 TSH → 亢進,須配合 free T4 判讀。'},
-];
-
+// ===== 資料層:從 /data/labs.json 載入 ===============================
+// 新增/修改檢驗請改 data/labs.json,本檔不需動。
+let LABS=[];
 const PANELS=['全部','電解質','腎功能','肝功能','CBC','凝血','心肌酵素','發炎','血糖內分泌','計算機'];
 // ==========================================================================
 
@@ -407,7 +241,12 @@ document.getElementById('chips').addEventListener('click',e=>{
 });
 document.getElementById('search').addEventListener('input',e=>{query=e.target.value;render();});
 
-buildChips();render();
+buildChips();
+cardsEl.innerHTML='<p class="empty">載入中…</p>';
+fetch('../data/labs.json',{cache:'no-cache'})
+  .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+  .then(d=>{LABS=d;render();})
+  .catch(e=>{console.error(e);cardsEl.innerHTML='<p class="empty">資料載入失敗('+e.message+')。請重新整理。</p>';});
 </script>
 <script data-goatcounter="https://iameric6411.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
