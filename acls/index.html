@@ -98,6 +98,7 @@
 
   <footer>
     教學示意用,波形為各節律的近似模型,非真實病人描記,細節(如 VF 隨機性、傳導比例)經簡化。實際判讀與處置請以真實 12 導程、臨床情境與最新 ACLS 指引為準;PEA 與無脈搏 VT 為臨床診斷,須結合脈搏評估。
+    <span style="color:#3a4842;font-family:ui-monospace,monospace;font-size:11px;">本頁最後 review:2026-06-13</span>
   </footer>
 </div>
 
@@ -160,7 +161,7 @@ const R={
   // ===== bradyarrhythmia =====
   sbrady:{g:'brady',name:'竇性心搏過緩',rate:'≈50/分',reg:'規則',
     feats:['每個 QRS 前有正常 P 波','PR 正常、節律規則','速率 < 60/分'],
-    action:'有症狀才治療:atropine 0.5mg(可重複至 3mg);無效 → 經皮節律器 / dopamine / 腎上腺素輸注。',
+    action:'有症狀才治療:atropine 1 mg IV,每 3–5 分鐘可重複(最大累積 3 mg,AHA 2020);無效 → 經皮節律器 / dopamine / 腎上腺素輸注。',
     mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){P(s.n);Q(s.n+0.16,NORM);s.n+=1.2;}}},
   avb1:{g:'brady',name:'一度房室阻斷',rate:'≈65/分',reg:'規則',
     feats:['PR 間期固定延長(> 0.20s)','每個 P 都下傳、無漏失','多為良性'],

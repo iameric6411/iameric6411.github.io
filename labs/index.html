@@ -129,7 +129,7 @@
     </div>
     <div class="calcbox" id="calc-ag">
       <h3>陰離子間隙 Anion Gap</h3>
-      <p class="formula">AG = Na − (Cl + HCO₃) · 正常約 8–12 mEq/L</p>
+      <p class="formula">AG = Na − (Cl + HCO₃) · 正常約 6–12 mEq/L(現代 ion-selective electrode 法已下修,舊版 8–12 可能漏掉 mild acidosis)</p>
       <div class="frow">
         <div class="field"><label>Na</label><input id="ag_na" type="number" inputmode="decimal" placeholder="140"><span class="u">mEq/L</span></div>
         <div class="field"><label>Cl</label><input id="ag_cl" type="number" inputmode="decimal" placeholder="104"><span class="u">mEq/L</span></div>
@@ -191,6 +191,7 @@
   <footer>
     教學示意用,參考值因實驗室、年齡、檢體與單位而異,僅為常見範例;critical(panic)值各院標準不一。實際判讀請以該院報告區間與臨床情境為準。<br>
     <a href="../">← 返回總覽</a> · <a href="../ecg/">電解質心電圖</a> · <a href="../flow/">判讀流程</a> · <a href="../acls/">ACLS 心律</a>
+    <span style="color:#3a4842;font-family:ui-monospace,monospace;font-size:11px;">本頁最後 review:2026-06-13</span>
   </footer>
 </div>
 
@@ -312,7 +313,7 @@ function calcAG(){
   const na=num('ag_na'),cl=num('ag_cl'),hco3=num('ag_hco3'),alb=num('ag_alb'),out=document.getElementById('ag_out');
   if(na==null||cl==null||hco3==null){out.innerHTML='輸入 Na、Cl、HCO₃ 後自動計算。';return;}
   const ag=na-(cl+hco3);
-  let v,c;if(ag>12){v='升高 (high AG)';c='var(--high)';}else if(ag<8){v='偏低';c='var(--low)';}else{v='正常';c='var(--safe)';}
+  let v,c;if(ag>12){v='升高 (high AG)';c='var(--high)';}else if(ag<6){v='偏低';c='var(--low)';}else{v='正常 (6–12)';c='var(--safe)';}
   const lines=[`陰離子間隙 <span class="big">${ag.toFixed(0)}</span> mEq/L ${verdict(v,c)}`];
   if(alb!=null){const ca=ag+2.5*(4.0-alb);
     lines.push(`<span style="color:#7f9489">白蛋白校正 AG ≈ ${ca.toFixed(0)}(albumin 每低 1 g/dL 約 +2.5)</span>`);}

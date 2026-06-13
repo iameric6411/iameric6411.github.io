@@ -157,6 +157,7 @@
 
   <footer>
     教學示意用,波形為依電解質分期建立的近似模型,非真實臨床描記。實際個體差異大,濃度與波形不一定線性對應;臨床判讀請以真實 12 導程與電解質數據為準。
+    <span style="color:#3a4842;font-family:ui-monospace,monospace;font-size:11px;">本頁最後 review:2026-06-13</span>
   </footer>
 </div>
 
@@ -233,8 +234,8 @@ const CFG={
       return P;},
     feats:[
       {l:'QT 間期縮短(ST 段變短)',on:v=>v>=11},
-      {l:'Osborn (J) 波',on:v=>v>=14},
-      {l:'心搏過緩 / 傳導阻滯',on:v=>v>=14.5},
+      {l:'心搏過緩 / AV block',on:v=>v>=14},
+      {l:'極嚴重時可進展心搏停止',on:v=>v>=14.5},
       {l:'QT 間期延長(ST 段拉長)',on:v=>v<=8.0},
       {l:'Torsades 風險',on:v=>v<=6.5},
     ],
@@ -249,7 +250,7 @@ const CFG={
       {max:14.0,c:'#ff7a3c',pill:'中度',name:'中度高血鈣',
         desc:'QT 明顯縮短。',mgmt:'積極給予 IV normal saline 輸液,必要時加 loop diuretic(如 furosemide)促進排鈣,並考慮 bisphosphonate 或 calcitonin。'},
       {max:99,c:'#ff3b53',pill:'危急',name:'嚴重高血鈣',
-        desc:'極短 QT,可能出現 Osborn(J)波與心搏過緩、傳導阻滯。',mgmt:'緊急降鈣治療(bisphosphonate、calcitonin、積極輸液 ± 利尿),並處理心律不整,必要時安排透析。'},
+        desc:'極短 QT;心搏過緩、AV block 可能出現,極嚴重時可進展為心搏停止。',mgmt:'緊急降鈣治療(bisphosphonate、calcitonin、積極輸液 ± 利尿),並處理心律不整,必要時安排透析。'},
     ]},
 };
 
