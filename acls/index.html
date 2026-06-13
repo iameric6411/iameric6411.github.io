@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACLS 心律辨識對照頁</title>
+<style>
+  :root{
+    --bg:#070a0d;--bezel:#0e1419;--grid:#15211c;--grid-strong:#1d3329;
+    --ink:#e7f3ee;--muted:#7f9489;
+    --shock:#ff3b53;--nonshock:#f5c042;--brady:#46b0ff;--tachy:#b48cff;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:22px 18px 56px}
+  h1{font-size:18px;font-weight:700;margin:0}
+  .sub{font-size:12.5px;color:var(--muted);margin:3px 0 0}
+
+  .groups{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+  @media(max-width:780px){.groups{grid-template-columns:repeat(2,1fr)}}
+  .grp{background:#0c1217;border:1px solid #182530;border-radius:12px;padding:11px}
+  .grp h3{font-size:11px;letter-spacing:1px;margin:0 0 9px;font-family:var(--mono);display:flex;align-items:center;gap:7px}
+  .grp h3 .d{width:9px;height:9px;border-radius:50%}
+  .rbtn{display:block;width:100%;text-align:left;font-size:12.5px;padding:7px 9px;margin-bottom:5px;
+    border-radius:7px;background:#0a0f14;border:1px solid #15212a;color:#aebcb4;cursor:pointer;transition:.15s}
+  .rbtn:last-child{margin-bottom:0}
+  .rbtn:hover{border-color:#2a3a44;color:var(--ink)}
+  .rbtn.active{color:#06120c;font-weight:700}
+  .rbtn:focus-visible{outline:2px solid #2bd07a;outline-offset:1px}
+
+  .monitor{position:relative;border-radius:14px;
+    background:radial-gradient(120% 140% at 50% -20%,#10181e 0%,var(--bezel) 60%,#080c0f 100%);
+    border:1px solid #1a2730;padding:10px;box-shadow:0 1px 0 #233039 inset,0 18px 50px -24px #000}
+  .screen{position:relative;border-radius:9px;overflow:hidden;background:#050807;border:1px solid #14201b}
+  canvas{display:block;width:100%;height:auto}
+  .hud{position:absolute;top:11px;left:14px;right:14px;display:flex;justify-content:space-between;
+    pointer-events:none;font-family:var(--mono);align-items:flex-start}
+  .rname{font-size:15px;font-weight:700}
+  .rrate{font-size:12px;color:#5fd8ac;text-align:right}
+  .pause{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;
+    background:rgba(5,8,7,.55);font-family:var(--mono);color:#bfe;font-size:13px;letter-spacing:1px}
+
+  .info{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:780px){.info{grid-template-columns:1fr}}
+  .card{background:#0c1217;border:1px solid #182530;border-radius:12px;padding:16px}
+  .badge{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;
+    padding:4px 10px;border-radius:6px;margin-bottom:12px}
+  .meta{display:flex;gap:22px;margin-bottom:12px}
+  .meta div{font-size:12px;color:var(--muted)}
+  .meta b{display:block;font-size:14px;color:var(--ink);font-family:var(--mono);margin-top:2px}
+  .feat{list-style:none;margin:0;padding:0}
+  .feat li{font-size:13px;color:#9fb1a8;padding:6px 0 6px 16px;position:relative;line-height:1.5;border-top:1px solid #131d22}
+  .feat li:first-child{border-top:none}
+  .feat li:before{content:"▸";position:absolute;left:0;color:var(--cl,#2bd07a)}
+  .act h2{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:0 0 10px;font-weight:600}
+  .act p{margin:0;font-size:13.5px;line-height:1.65;color:#cdded6}
+
+  footer{margin-top:22px;font-size:11.5px;color:#465751;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div><h1>ACLS 心律辨識對照頁</h1>
+  <p class="sub">依急救演算法分四類 · 點選任一節律即時描繪 · 點畫面可暫停</p></div>
+
+  <div class="groups" id="groups"></div>
+
+  <div class="monitor">
+    <div class="screen">
+      <canvas id="ecg" width="1840" height="500"></canvas>
+      <div class="hud">
+        <div class="rname" id="rname"></div>
+        <div class="rrate" id="rrate"></div>
+      </div>
+      <div class="pause" id="pause">已暫停 — 點畫面繼續</div>
+    </div>
+  </div>
+
+  <div class="info">
+    <div class="card">
+      <span class="badge" id="badge"></span>
+      <div class="meta">
+        <div>心室率<b id="mrate"></b></div>
+        <div>規律性<b id="mreg"></b></div>
+      </div>
+      <ul class="feat" id="feat"></ul>
+    </div>
+    <div class="card act">
+      <h2>ACLS 處置重點</h2>
+      <p id="action"></p>
+    </div>
+  </div>
+
+  <footer>
+    教學示意用,波形為各節律的近似模型,非真實病人描記,細節(如 VF 隨機性、傳導比例)經簡化。實際判讀與處置請以真實 12 導程、臨床情境與最新 ACLS 指引為準;PEA 與無脈搏 VT 為臨床診斷,須結合脈搏評估。
+  </footer>
+</div>
+
+<script>
+const cv=document.getElementById('ecg'),ctx=cv.getContext('2d');
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const W=cv.width,H=cv.height,baseY=H*0.56,gain=H*0.30,spp=0.0036;
+const gauss=(t,c,w,a)=>{const d=(t-c)/w;return a*Math.exp(-0.5*d*d);};
+
+// one complex centred at dt=0 (seconds), opts choose which waves
+function complex(dt,o){
+  let v=0;const w=o.w||1;
+  if(o.pA)v+=gauss(dt,0,0.022,o.pA);
+  if(o.rA!==undefined){
+    v+=gauss(dt,-0.020*w,0.008*w,-0.10);
+    v+=gauss(dt,0,0.013*w,o.rA);
+    v+=gauss(dt,0.026*w,0.010*w,-0.20);
+  }
+  if(o.tA)v+=gauss(dt,0.20+0.05*(w-1),0.050,o.tA);
+  return v;
+}
+let events=[];
+function sample(te,cfg){
+  let v=cfg.base?cfg.base(te):0;
+  for(const e of events){const dt=te-e.t0;if(dt>-0.45&&dt<0.55)v+=complex(dt,e.o);}
+  return v;
+}
+const P=t0=>events.push({t0,o:{pA:0.15}});                     // lone P
+const Q=(t0,o)=>events.push({t0,o});                            // QRS(+T)
+
+// ---- rhythm library -------------------------------------------------
+const NORM={rA:1.0,tA:0.28,w:1}, WIDE={rA:1.05,tA:-0.4,w:3}, ESC={rA:0.9,tA:-0.3,w:2.4};
+const R={
+  // ===== shockable =====
+  vfc:{g:'shock',name:'心室顫動(粗)',rate:'無法測量',reg:'極不規則',
+    feats:['無可辨識的 P、QRS、T 波','雜亂、隨機、振幅不一的顫動波','粗顫 → 較可能轉復'],
+    action:'可電擊。立即去顫(雙相 120–200J)→ 立即恢復 CPR 2 分鐘 → 腎上腺素 1mg 每 3–5 分鐘 → 難治性給 amiodarone 300mg(或 lidocaine)。',
+    base:t=>0.5*(Math.sin(2*Math.PI*4.1*t)+0.7*Math.sin(2*Math.PI*6.7*t+1)+0.5*Math.sin(2*Math.PI*9.3*t+2))/2.2+(Math.random()-0.5)*0.12},
+  vff:{g:'shock',name:'心室顫動(細)',rate:'無法測量',reg:'極不規則',
+    feats:['振幅低、近似平線','易與 asystole 混淆 → 換導程、加大增益確認','細顫:轉復機率較低'],
+    action:'仍視為可電擊。先確認非導線問題;去顫 + 高品質 CPR + 腎上腺素;盡量改善心肌灌流使其「變粗」再電擊。',
+    base:t=>(0.5*(Math.sin(2*Math.PI*5.0*t)+0.6*Math.sin(2*Math.PI*8.2*t+1))/1.6+(Math.random()-0.5)*0.1)*0.22},
+  pvt:{g:'shock',name:'無脈搏 室性心搏過速',rate:'≈180/分',reg:'規則',
+    feats:['寬大、單型 QRS,無 P 波','規則而快速','有脈為 VT、無脈走可電擊流程'],
+    action:'無脈搏 → 等同可電擊:去顫 + CPR + 腎上腺素,難治性 amiodarone。若有脈搏改走心搏過速流程。',
+    mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){Q(s.n,WIDE);s.n+=0.33;}}},
+  tdp:{g:'shock',name:'尖端扭轉(Torsades)',rate:'≈210/分',reg:'多型',
+    feats:['多型 VT,QRS 振幅繞基線「扭轉」起伏','常見於 QT 延長(低鎂/低鉀/藥物)','可自行終止或惡化為 VF'],
+    action:'可電擊。無脈去顫;靜脈硫酸鎂 1–2g;矯正電解質、停延長 QT 藥物;必要時加速心率(節律器/isoproterenol)。',
+    base:t=>(0.25+0.75*Math.abs(Math.sin(Math.PI*t/2.4)))*0.92*Math.sin(2*Math.PI*3.2*t)},
+  // ===== non-shockable =====
+  asys:{g:'nonshock',name:'心搏停止(Asystole)',rate:'0',reg:'—',
+    feats:['平線,無電氣活動','確認:檢查導線、增益、換導程','排除細小 VF'],
+    action:'不可電擊。高品質 CPR + 腎上腺素 1mg 每 3–5 分鐘;積極找並矯正可逆原因(5H5T)。',
+    base:t=>0.012*Math.sin(2*Math.PI*0.3*t)+(Math.random()-0.5)*0.012},
+  pea:{g:'nonshock',name:'無脈搏電氣活動(PEA)',rate:'可變(常緩)',reg:'視原因',
+    feats:['有組織的電氣活動,但「無脈搏」','心電圖可長得像任何節律','診斷靠臨床:有波形卻摸不到脈'],
+    action:'不可電擊。CPR + 腎上腺素;核心是找並矯正 5H5T(缺氧、低血容、酸中毒、高低鉀、低體溫;張力性氣胸、心包填塞、毒物、栓塞)。',
+    mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){Q(s.n,ESC);s.n+=1.4;}}},
+  // ===== bradyarrhythmia =====
+  sbrady:{g:'brady',name:'竇性心搏過緩',rate:'≈50/分',reg:'規則',
+    feats:['每個 QRS 前有正常 P 波','PR 正常、節律規則','速率 < 60/分'],
+    action:'有症狀才治療:atropine 0.5mg(可重複至 3mg);無效 → 經皮節律器 / dopamine / 腎上腺素輸注。',
+    mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){P(s.n);Q(s.n+0.16,NORM);s.n+=1.2;}}},
+  avb1:{g:'brady',name:'一度房室阻斷',rate:'≈65/分',reg:'規則',
+    feats:['PR 間期固定延長(> 0.20s)','每個 P 都下傳、無漏失','多為良性'],
+    action:'通常無需治療,觀察並檢視可能藥物(β阻斷、鈣阻斷、digoxin)。',
+    mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){P(s.n);Q(s.n+0.30,NORM);s.n+=0.92;}}},
+  mob1:{g:'brady',name:'二度 I 型(Wenckebach)',rate:'≈55/分',reg:'規則性不規則',
+    feats:['PR 漸進延長,直到一個 P 後漏失 QRS','RR 漸縮、群聚搏動','阻斷在房室結,多穩定'],
+    action:'多數穩定;有症狀才 atropine,少需節律器。檢視藥物與缺血。',
+    mk:()=>({a:0,k:0}),sch:(s,u)=>{while(s.a<=u){P(s.a);if(s.k<3)Q(s.a+0.16+0.06*s.k,NORM);s.k=(s.k+1)%4;s.a+=0.9;}}},
+  mob2:{g:'brady',name:'二度 II 型(Mobitz II)',rate:'≈50/分',reg:'規則性不規則',
+    feats:['PR 固定,間歇性突然漏失 QRS','下傳的 PR 不變','阻斷在 His 以下 → 易惡化'],
+    action:'易進展為完全阻斷:備經皮/經靜脈節律器;atropine 常無效,勿過度依賴。',
+    mk:()=>({a:0,k:0}),sch:(s,u)=>{while(s.a<=u){P(s.a);if(s.k!==2)Q(s.a+0.18,NORM);s.k=(s.k+1)%3;s.a+=0.86;}}},
+  cavb:{g:'brady',name:'完全房室阻斷(三度)',rate:'≈40/分',reg:'規則(各自)',
+    feats:['P 波與 QRS 完全分離(房室分離)','心房快、心室慢,各自規則','逸搏 QRS 常增寬'],
+    action:'症狀性心搏過緩:節律器為主;atropine 多無效,準備經靜脈節律,找可逆原因。',
+    mk:()=>({a:0,v:0.3}),sch:(s,u)=>{while(s.a<=u){P(s.a);s.a+=0.75;}while(s.v<=u){Q(s.v,ESC);s.v+=1.5;}}},
+  // ===== tachyarrhythmia =====
+  svt:{g:'tachy',name:'室上性心搏過速(SVT)',rate:'≈160/分',reg:'規則',
+    feats:['窄 QRS、快速、規則','P 波常看不見(埋在 T 或 QRS)','起止突然'],
+    action:'穩定:迷走動作 → adenosine 6mg(再 12mg);不穩定 → 同步電氧轉復。',
+    mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){Q(s.n,{rA:1.0,tA:0.20,w:1});s.n+=0.38;}}},
+  af:{g:'tachy',name:'心房顫動(快速)',rate:'≈130/分(不規則)',reg:'絕對不規則',
+    feats:['無 P 波,基線呈纖顫波','RR「絕對不規則」','心室率視房室結傳導'],
+    action:'控制心室率(β阻斷/鈣阻斷);不穩定 → 同步電氧轉復;評估抗凝與發作時間(< 48h)。',
+    mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){Q(s.n,{rA:1.0,tA:0.24,w:1});s.n+=0.42+Math.random()*0.55;}},
+    base:t=>0.025*Math.sin(2*Math.PI*7.3*t)+0.018*Math.sin(2*Math.PI*11.1*t+1)},
+  afl:{g:'tachy',name:'心房撲動',rate:'心房≈300、心室視傳導',reg:'規則(固定傳導比)',
+    feats:['鋸齒狀 F 波(下壁導程明顯)','常見 2:1 或 4:1 房室傳導','心室率規則(如 150 或 75)'],
+    action:'類似 AF:控速或同步電氧轉復(常用低能量即可);評估抗凝。',
+    mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){Q(s.n,{rA:1.0,tA:0.05,w:1});s.n+=0.8;}},
+    base:t=>{const f=(t/0.2)%1;return 0.12*(2*f-1);}},
+  mvt:{g:'tachy',name:'室性心搏過速(有脈)',rate:'≈170/分',reg:'規則',
+    feats:['寬 QRS(> 0.12s)、單型、規則','房室分離可見(若有 P)','可惡化為無脈 VT/VF'],
+    action:'穩定:amiodarone / procainamide;不穩定 → 同步電氧轉復;無脈 → 走可電擊流程。',
+    mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){Q(s.n,WIDE);s.n+=0.35;}}},
+};
+const GROUPS=[
+  {id:'shock',title:'可電擊',color:'var(--shock)',items:['vfc','vff','pvt','tdp']},
+  {id:'nonshock',title:'不可電擊',color:'var(--nonshock)',items:['asys','pea']},
+  {id:'brady',title:'心搏過緩',color:'var(--brady)',items:['sbrady','avb1','mob1','mob2','cavb']},
+  {id:'tachy',title:'心搏過速',color:'var(--tachy)',items:['svt','af','afl','mvt']},
+];
+const GCOLOR={shock:'#ff3b53',nonshock:'#f5c042',brady:'#46b0ff',tachy:'#b48cff'};
+const GLABEL={shock:'可電擊',nonshock:'不可電擊',brady:'心搏過緩',tachy:'心搏過速'};
+
+// ---- monitor --------------------------------------------------------
+let cur='vfc',st={},te=0,x=0,last=performance.now(),paused=false;
+let trace=new Float32Array(W).fill(baseY);
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function drawGrid(){
+  ctx.fillStyle='#050807';ctx.fillRect(0,0,W,H);ctx.lineWidth=1;
+  ctx.strokeStyle=cssv('--grid');ctx.beginPath();
+  for(let gx=0;gx<W;gx+=20){ctx.moveTo(gx,0);ctx.lineTo(gx,H);}
+  for(let gy=0;gy<H;gy+=20){ctx.moveTo(0,gy);ctx.lineTo(W,gy);}ctx.stroke();
+  ctx.strokeStyle=cssv('--grid-strong');ctx.beginPath();
+  for(let gx=0;gx<W;gx+=100){ctx.moveTo(gx,0);ctx.lineTo(gx,H);}
+  for(let gy=0;gy<H;gy+=100){ctx.moveTo(0,gy);ctx.lineTo(W,gy);}ctx.stroke();
+}
+function renderScreen(curx,color){
+  drawGrid();
+  ctx.lineJoin='round';ctx.lineCap='round';ctx.strokeStyle=color;ctx.lineWidth=2.3;
+  ctx.shadowColor=color;ctx.shadowBlur=8;ctx.beginPath();let started=false;
+  for(let i=0;i<W;i++){
+    if(curx>=0&&i>=curx&&i<curx+28){started=false;continue;}
+    if(!started){ctx.moveTo(i,trace[i]);started=true;}else ctx.lineTo(i,trace[i]);
+  }
+  ctx.stroke();ctx.shadowBlur=0;
+  if(curx>=0){ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(curx,0,2,H);}
+}
+function frame(now){
+  const dt=Math.min((now-last)/1000,0.05);last=now;
+  if(!paused){
+    const cfg=R[cur],pxs=W*0.21,adv=pxs*dt;
+    if(cfg.sch)cfg.sch(st,te+adv*spp+0.6);
+    if(events.length>500)events=events.filter(e=>e.t0>te-1.0);
+    for(let i=0;i<adv;i++){
+      te+=spp;trace[Math.floor(x)%W]=baseY-sample(te,cfg)*gain;
+      x++;if(x>=W)x=0;
+    }
+    renderScreen(Math.floor(x),GCOLOR[cfg.g]);
+  }
+  requestAnimationFrame(frame);
+}
+function drawStatic(){
+  const cfg=R[cur];events=[];const s=cfg.mk?cfg.mk():{};if(cfg.sch)cfg.sch(s,W*spp+0.6);
+  for(let i=0;i<W;i++)trace[i]=baseY-sample(i*spp,cfg)*gain;
+  renderScreen(-1,GCOLOR[cfg.g]);
+}
+
+function select(id){
+  cur=id;const cfg=R[id],col=GCOLOR[cfg.g];
+  document.querySelectorAll('.rbtn').forEach(b=>{
+    const on=b.dataset.id===id;b.classList.toggle('active',on);
+    b.style.background=on?col:'';b.style.borderColor=on?col:'';});
+  document.getElementById('rname').textContent=cfg.name;
+  document.getElementById('rname').style.color=col;
+  document.getElementById('rrate').textContent=cfg.rate;
+  const bd=document.getElementById('badge');bd.textContent=GLABEL[cfg.g];
+  bd.style.background=col+'22';bd.style.color=col;
+  document.getElementById('mrate').textContent=cfg.rate;
+  document.getElementById('mreg').textContent=cfg.reg;
+  const ul=document.getElementById('feat');ul.innerHTML='';
+  cfg.feats.forEach(f=>{const li=document.createElement('li');li.textContent=f;li.style.setProperty('--cl',col);ul.appendChild(li);});
+  document.getElementById('action').textContent=cfg.action;
+  // reset stream
+  events=[];te=0;st=cfg.mk?cfg.mk():{};trace.fill(baseY);
+  if(reduce)drawStatic();
+}
+
+// build selector
+const gc=document.getElementById('groups');
+GROUPS.forEach(G=>{
+  const d=document.createElement('div');d.className='grp';
+  d.innerHTML=`<h3><span class="d" style="background:${G.color}"></span>${G.title}</h3>`;
+  G.items.forEach(id=>{const b=document.createElement('button');b.className='rbtn';b.dataset.id=id;
+    b.textContent=R[id].name;b.onclick=()=>select(id);d.appendChild(b);});
+  gc.appendChild(d);
+});
+cv.addEventListener('click',()=>{paused=!paused;document.getElementById('pause').style.display=paused?'flex':'none';});
+
+drawGrid();select('vfc');
+if(!reduce)requestAnimationFrame(frame);
+</script>
+</body>
+</html>
