@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>動脈血氣 · 酸鹼判讀器</title>
+<style>
+  :root{
+    --bg:#070a0d;--ink:#e7f3ee;--muted:#7f9489;--ghost:#46584f;
+    --safe:#2bd07a;--acid:#ff7a3c;--alk:#46b0ff;--warn:#f5c042;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 18px 56px}
+  h1{font-size:19px;font-weight:700;margin:0}
+  .sub{font-size:12.5px;color:var(--muted);margin:4px 0 0;line-height:1.6}
+  .sub a{color:#5fd8ac;text-decoration:none}
+
+  .box{background:#0c1217;border:1px solid #182530;border-radius:14px;padding:18px 16px;margin-top:16px}
+  .box h2{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600}
+  .frow{display:flex;flex-wrap:wrap;gap:12px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:11.5px;color:var(--muted)}
+  .field .req{color:var(--safe)}
+  .field input{width:96px;background:#0a0f14;border:1px solid #18242d;border-radius:8px;
+    padding:10px 11px;color:var(--ink);font-family:var(--mono);font-size:15px;outline:none}
+  .field input:focus{border-color:#27513c}
+  .field .u{font-family:var(--mono);font-size:10px;color:var(--ghost)}
+
+  .presets{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .preset{font-family:var(--mono);font-size:11.5px;padding:7px 12px;border-radius:7px;cursor:pointer;
+    background:#0a0f14;border:1px solid #18242d;color:var(--muted);transition:.15s}
+  .preset:hover{border-color:#27513c;color:var(--ink)}
+
+  .steps{display:grid;gap:9px}
+  .step{display:flex;gap:11px;align-items:flex-start;background:#0a0f14;border:1px solid #18242d;
+    border-left:4px solid var(--ghost);border-radius:9px;padding:11px 13px;font-size:13.5px;line-height:1.55}
+  .step .tag{flex:0 0 auto;font-family:var(--mono);font-size:11.5px;color:var(--muted);min-width:78px;font-weight:700}
+  .step.acid{border-left-color:var(--acid)} .step.acid .tag{color:var(--acid)}
+  .step.alk{border-left-color:var(--alk)} .step.alk .tag{color:var(--alk)}
+  .step.normal{border-left-color:var(--safe)} .step.normal .tag{color:var(--safe)}
+  .step.warn{border-left-color:var(--warn)} .step.warn .tag{color:var(--warn)}
+  .ph{font-family:var(--mono);font-size:12.5px;color:var(--ghost);padding:8px 2px}
+  .ref{font-family:var(--mono);font-size:11px;color:var(--ghost);margin-top:12px;line-height:1.6}
+
+  footer{margin-top:24px;font-size:11.5px;color:#465751;line-height:1.7}
+  footer a{color:#5a6d65}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>動脈血氣 · 酸鹼判讀器</h1>
+    <p class="sub">輸入數值,逐步判讀:① pH → ② 原發障礙 → ③ 代償是否恰當 → ④ 陰離子間隙 → ⑤ delta-delta。屬 <a href="../flow/">判讀流程</a>家族。</p>
+  </header>
+
+  <div class="box">
+    <h2>輸入數值</h2>
+    <div class="frow">
+      <div class="field"><label>pH <span class="req">*</span></label><input id="pH" type="number" step="0.01" inputmode="decimal" placeholder="7.40"><span class="u">7.35–7.45</span></div>
+      <div class="field"><label>PaCO₂ <span class="req">*</span></label><input id="pco2" type="number" step="0.1" inputmode="decimal" placeholder="40"><span class="u">mmHg · 35–45</span></div>
+      <div class="field"><label>HCO₃⁻ <span class="req">*</span></label><input id="hco3" type="number" step="0.1" inputmode="decimal" placeholder="24"><span class="u">mEq/L · 22–26</span></div>
+      <div class="field"><label>Na</label><input id="na" type="number" inputmode="decimal" placeholder="選填"><span class="u">mEq/L</span></div>
+      <div class="field"><label>Cl</label><input id="cl" type="number" inputmode="decimal" placeholder="選填"><span class="u">mEq/L</span></div>
+      <div class="field"><label>Albumin</label><input id="alb" type="number" step="0.1" inputmode="decimal" placeholder="選填"><span class="u">g/dL</span></div>
+    </div>
+    <div class="presets" id="presets"></div>
+  </div>
+
+  <div class="box">
+    <h2>判讀</h2>
+    <div class="steps" id="out"><p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p></div>
+    <p class="ref">代償公式:代謝性酸中毒 Winter's 預期 PaCO₂ = 1.5×HCO₃ + 8 (±2);代謝性鹼中毒 ≈ 40 + 0.7×(HCO₃−24);呼吸性以急性/慢性預期 HCO₃ 對照。AG = Na − (Cl + HCO₃),正常 8–12;白蛋白每低 1 g/dL 校正 AG +2.5。</p>
+  </div>
+
+  <footer>
+    教學示意用,公式為常見近似值(±範圍各家略異),臨床判讀須結合病史、容積與電解質。<br>
+    <a href="../">← 返回總覽</a> · <a href="../labs/">實驗室檢查</a> · <a href="../flow/">心電圖判讀</a>
+  </footer>
+</div>
+
+<script>
+const num=id=>{const v=parseFloat(document.getElementById(id).value);return isNaN(v)?null:v;};
+const fields=['pH','pco2','hco3','na','cl','alb'];
+
+const PRESETS={
+  '正常':{pH:7.40,pco2:40,hco3:24,na:140,cl:104,alb:4.0},
+  'DKA(高 AG 代酸)':{pH:7.20,pco2:25,hco3:10,na:140,cl:100,alb:4.0},
+  'COPD(慢性呼酸)':{pH:7.34,pco2:60,hco3:31,na:140,cl:100,alb:4.0},
+  '嘔吐(代謝性鹼中毒)':{pH:7.50,pco2:46,hco3:34,na:140,cl:90,alb:4.0},
+  '焦慮(呼吸性鹼中毒)':{pH:7.50,pco2:28,hco3:22,na:140,cl:104,alb:4.0},
+};
+
+function interp(){
+  const pH=num('pH'),pco2=num('pco2'),hco3=num('hco3'),na=num('na'),cl=num('cl'),alb=num('alb');
+  const out=document.getElementById('out');
+  if(pH==null||pco2==null||hco3==null){out.innerHTML='<p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p>';return;}
+  const S=[];const push=(tag,t,tone)=>S.push({tag,t,tone:tone||'info'});
+  const rng=x=>`${(x-2).toFixed(0)}–${(x+2).toFixed(0)}`;
+
+  // ① pH
+  let dir;
+  if(pH<7.35){dir='acid';push('① pH',`pH ${pH} → 酸血症 (acidemia)`,'acid');}
+  else if(pH>7.45){dir='alk';push('① pH',`pH ${pH} → 鹼血症 (alkalemia)`,'alk');}
+  else{dir='normal';push('① pH',`pH ${pH} → 正常範圍(可能完全代償或混合障礙)`,'normal');}
+
+  const metAcid=hco3<22,metAlk=hco3>26,respAcid=pco2>45,respAlk=pco2<35;
+
+  // ② primary
+  let primary,ptone='info';
+  if(dir==='acid'){
+    if(metAcid&&respAcid){primary='混合型酸中毒(代謝 + 呼吸)';ptone='acid';}
+    else if(metAcid){primary='代謝性酸中毒';ptone='acid';}
+    else if(respAcid){primary='呼吸性酸中毒';ptone='acid';}
+    else{primary='酸血,但 HCO₃/PaCO₂ 未見明顯原發 → 複查或混合';ptone='warn';}
+  }else if(dir==='alk'){
+    if(metAlk&&respAlk){primary='混合型鹼中毒(代謝 + 呼吸)';ptone='alk';}
+    else if(metAlk){primary='代謝性鹼中毒';ptone='alk';}
+    else if(respAlk){primary='呼吸性鹼中毒';ptone='alk';}
+    else{primary='鹼血,但未見明顯原發 → 複查或混合';ptone='warn';}
+  }else{
+    if((respAcid&&metAlk)||(respAlk&&metAcid)){primary='pH 正常但 PaCO₂ 與 HCO₃ 皆偏離 → 混合型或完全代償';ptone='warn';}
+    else if(!metAcid&&!metAlk&&!respAcid&&!respAlk){primary='正常血氣';ptone='normal';}
+    else{primary='pH 正常、單一參數偏離 → 代償中或早期混合';ptone='warn';}
+  }
+  push('② 原發障礙',primary,ptone);
+
+  // ③ compensation
+  if(primary==='代謝性酸中毒'){
+    const exp=1.5*hco3+8;let m=`Winter's 預期 PaCO₂ = 1.5×${hco3}+8 = ${exp.toFixed(0)} (±2,即 ${rng(exp)});實測 ${pco2}`;
+    if(pco2>exp+2)m+=' → 偏高,合併呼吸性酸中毒。';
+    else if(pco2<exp-2)m+=' → 偏低,合併呼吸性鹼中毒。';
+    else m+=' → 代償恰當(單純代謝性酸中毒)。';
+    push('③ 呼吸代償',m);
+  }else if(primary==='代謝性鹼中毒'){
+    const exp=40+0.7*(hco3-24);let m=`預期 PaCO₂ ≈ 40 + 0.7×(${hco3}−24) = ${exp.toFixed(0)} (±2);實測 ${pco2}`;
+    if(pco2>exp+2)m+=' → 合併呼吸性酸中毒。';
+    else if(pco2<exp-2)m+=' → 合併呼吸性鹼中毒。';
+    else m+=' → 代償恰當。';
+    push('③ 呼吸代償',m);
+  }else if(primary==='呼吸性酸中毒'){
+    const ac=24+1*(pco2-40)/10,ch=24+3.5*(pco2-40)/10;
+    push('③ 代謝代償',`急性預期 HCO₃ ≈ ${ac.toFixed(0)}、慢性 ≈ ${ch.toFixed(0)};實測 ${hco3} → 越接近慢性值代表代償越久(越慢性)。`);
+  }else if(primary==='呼吸性鹼中毒'){
+    const ac=24-2*(40-pco2)/10,ch=24-4*(40-pco2)/10;
+    push('③ 代謝代償',`急性預期 HCO₃ ≈ ${ac.toFixed(0)}、慢性 ≈ ${ch.toFixed(0)};實測 ${hco3}。`);
+  }
+
+  // ④ anion gap (optional)
+  if(na!=null&&cl!=null){
+    let ag=na-(cl+hco3),agtxt=`AG = ${na} − (${cl}+${hco3}) = ${ag.toFixed(0)}`,cag=ag;
+    if(alb!=null){cag=ag+2.5*(4-alb);agtxt+=`;白蛋白校正 ≈ ${cag.toFixed(0)}`;}
+    const high=cag>12;
+    push('④ 陰離子間隙',agtxt+(high?' → 升高 (high AG)':' → 正常範圍'),high?'acid':'normal');
+    if(high){
+      const dd=(cag-12)/(24-hco3);let m;
+      if(!isFinite(dd)||Math.abs(24-hco3)<0.5)m='HCO₃ 接近 24,delta-ratio 不穩定,請結合臨床。';
+      else if(dd<0.4)m=`delta-ratio ${dd.toFixed(1)} < 1 → 同時合併正常 AG 代謝性酸中毒。`;
+      else if(dd<=2)m=`delta-ratio ${dd.toFixed(1)} ≈ 1–2 → 單純 high AG 代謝性酸中毒。`;
+      else m=`delta-ratio ${dd.toFixed(1)} > 2 → 同時合併代謝性鹼中毒或慢性呼吸性酸中毒(HCO₃ 基礎偏高)。`;
+      push('⑤ delta-delta',m+' 高 AG 病因 → MUDPILES(乳酸、酮酸、腎衰、毒物…)。');
+    }else{
+      push('⑤ 病因方向','若為正常 AG 代謝性酸中毒 → 想腸胃道 HCO₃ 流失(腹瀉)或腎小管酸中毒(HARDUP)。');
+    }
+  }else{
+    push('④ 陰離子間隙','(選填 Na、Cl 可計算 AG 與 delta-delta)','info');
+  }
+
+  out.innerHTML=S.map(s=>`<div class="step ${s.tone}"><span class="tag">${s.tag}</span><span>${s.t}</span></div>`).join('');
+}
+
+// presets + listeners
+document.getElementById('presets').innerHTML=Object.keys(PRESETS).map(k=>
+  `<button class="preset" data-k="${k}">${k}</button>`).join('');
+document.getElementById('presets').addEventListener('click',e=>{
+  const b=e.target.closest('.preset');if(!b)return;
+  const p=PRESETS[b.dataset.k];fields.forEach(f=>document.getElementById(f).value=p[f]??'');interp();
+});
+fields.forEach(f=>document.getElementById(f).addEventListener('input',interp));
+interp();
+</script>
+</body>
+</html>
