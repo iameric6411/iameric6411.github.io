@@ -91,7 +91,8 @@
   </header>
 
   <div class="toolbar">
-    <input class="search" id="search" type="search" placeholder="搜尋檢驗名稱或原因(如:利尿劑、SIADH、腎衰竭)…" aria-label="搜尋">
+    <input class="search" id="search" type="search" autofocus
+      placeholder="搜尋:鉀 / K / potassium、Cr / 肌酸酐、SIADH、利尿劑…" aria-label="搜尋">
     <div class="chips" id="chips"></div>
   </div>
   <p class="count" id="count"></p>
@@ -171,7 +172,8 @@ function render(){
   const list=LABS.filter(l=>{
     if(panel!=='全部'&&l.panel!==panel)return false;
     if(!q)return true;
-    const hay=[l.name,l.en,l.panel,...(l.high?[...l.high.causes,...l.high.mgmt]:[]),
+    const hay=[l.name,l.en,l.panel,...(l.aliases||[]),
+      ...(l.high?[...l.high.causes,...l.high.mgmt]:[]),
       ...(l.low?[...l.low.causes,...l.low.mgmt]:[]),l.note||''].join(' ').toLowerCase();
     return hay.includes(q);
   });
