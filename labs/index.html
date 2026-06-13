@@ -31,11 +31,18 @@
 
   .cards{margin-top:12px;display:grid;gap:12px}
   .card{background:#0c1217;border:1px solid #182530;border-radius:12px;overflow:hidden}
-  .chead{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+  .cheadrow{display:flex;align-items:stretch}
+  .chead{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;
     background:none;border:none;color:var(--ink);font-family:var(--sans);padding:15px 16px}
   .chead:focus-visible{outline:2px solid var(--safe);outline-offset:-2px}
   .nm{font-size:16px;font-weight:700}
   .nm small{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-weight:400;margin-left:7px}
+  .pin{font-family:var(--mono);font-size:18px;line-height:1;background:none;border:none;cursor:pointer;
+    color:var(--ghost);padding:0 14px;transition:.15s;flex:0 0 auto;border-left:1px solid #131d22}
+  .pin:hover{color:#f0c84a;background:#13110a}
+  .pin.on{color:#f0c84a}
+  .pin:focus-visible{outline:2px solid #f0c84a;outline-offset:-3px}
+  .card.pinned{border-color:#3a2f15;background:linear-gradient(to right,#13110a 0,#0c1217 60px)}
   .headmeta{margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
   .ref{font-family:var(--mono);font-size:12px;color:var(--safe)}
   .reflabel{color:var(--ghost)}
@@ -140,6 +147,12 @@ const cardsEl=document.getElementById('cards'),countEl=document.getElementById('
 const calcEl=document.getElementById('calc'),searchEl=document.getElementById('search');
 let panel='全部',query='';
 
+// ---- 釘選(localStorage)----------------------------------------------
+const PIN_KEY='labs:pinned:v1';
+function getPinned(){try{return JSON.parse(localStorage.getItem(PIN_KEY)||'[]');}catch{return[];}}
+function setPinnedList(a){try{localStorage.setItem(PIN_KEY,JSON.stringify(a));}catch{}}
+function togglePin(id){const p=getPinned(),i=p.indexOf(id);if(i>=0)p.splice(i,1);else p.unshift(id);setPinnedList(p);}
+
 function fmtRef(r){
   if(!r)return'—';
   if(r[0]==null)return`≤ ${r[1]}`;
@@ -168,6 +181,9 @@ function render(){
     countEl.textContent='臨床計算機';calcCorrCa();calcAG();return;
   }
   calcEl.classList.remove('show');cardsEl.style.display='';searchEl.style.display='';
+  // 保留目前展開的卡片狀態(避免釘選/篩選時收合)
+  const openIds=new Set([...cardsEl.querySelectorAll('.card.open')].map(c=>c.dataset.id));
+  const pinned=new Set(getPinned());
   const q=query.trim().toLowerCase();
   const list=LABS.filter(l=>{
     if(panel!=='全部'&&l.panel!==panel)return false;
@@ -177,20 +193,27 @@ function render(){
       ...(l.low?[...l.low.causes,...l.low.mgmt]:[]),l.note||''].join(' ').toLowerCase();
     return hay.includes(q);
   });
-  countEl.textContent=`${list.length} 項`+(q?` · 符合「${query.trim()}」`:'');
+  // 釘選的排在最上(保持原順序)
+  list.sort((a,b)=>(pinned.has(a.id)?0:1)-(pinned.has(b.id)?0:1));
+  const pinCount=list.filter(l=>pinned.has(l.id)).length;
+  countEl.textContent=`${list.length} 項`+(pinCount?` · ★ ${pinCount} 釘選`:'')+(q?` · 符合「${query.trim()}」`:'');
   if(!list.length){cardsEl.innerHTML='<p class="empty">找不到符合的檢驗。</p>';return;}
   cardsEl.innerHTML=list.map(l=>{
     const crit=fmtCrit(l.critical,l.unit);
     const link=l.link?`<a class="link" href="${l.link.href}">${l.link.label}</a>`:'';
-    return `<article class="card" data-id="${l.id}">
-      <button class="chead" aria-expanded="false">
-        <span class="nm">${l.name}<small>${l.panel} · ${l.en} · ${l.unit}</small></span>
-        <span class="headmeta">
-          <span class="ref"><span class="reflabel">參考 </span>${fmtRef(l.ref)}</span>
-          ${crit?`<span class="crit">${crit}</span>`:''}
-          <span class="caret">▸</span>
-        </span>
-      </button>
+    const isPin=pinned.has(l.id),isOpen=openIds.has(l.id);
+    return `<article class="card${isPin?' pinned':''}${isOpen?' open':''}" data-id="${l.id}">
+      <div class="cheadrow">
+        <button class="chead" aria-expanded="${isOpen}">
+          <span class="nm">${l.name}<small>${l.panel} · ${l.en} · ${l.unit}</small></span>
+          <span class="headmeta">
+            <span class="ref"><span class="reflabel">參考 </span>${fmtRef(l.ref)}</span>
+            ${crit?`<span class="crit">${crit}</span>`:''}
+            <span class="caret">▸</span>
+          </span>
+        </button>
+        <button class="pin${isPin?' on':''}" data-pin="${l.id}" aria-label="${isPin?'取消釘選':'釘選'}" title="${isPin?'取消釘選':'釘選'}">${isPin?'★':'☆'}</button>
+      </div>
       <div class="cbody">
         ${dirBlock('hi',l.high)}
         ${dirBlock('lo',l.low)}
@@ -233,8 +256,10 @@ function calcAG(){
 
 // events
 cardsEl.addEventListener('click',e=>{
+  const pin=e.target.closest('.pin');
+  if(pin){togglePin(pin.dataset.pin);render();return;}
   const h=e.target.closest('.chead');if(!h)return;
-  const card=h.parentElement,open=card.classList.toggle('open');
+  const card=h.closest('.card'),open=card.classList.toggle('open');
   h.setAttribute('aria-expanded',open);
 });
 document.getElementById('chips').addEventListener('click',e=>{
