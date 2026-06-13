@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>實驗室檢查對照 · 電解質</title>
+<style>
+  :root{
+    --bg:#070a0d;--ink:#e7f3ee;--muted:#7f9489;--ghost:#46584f;
+    --safe:#2bd07a;--high:#ff7a3c;--low:#46b0ff;--crit:#ff3b53;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:24px 18px 56px}
+  h1{font-size:19px;font-weight:700;margin:0}
+  .sub{font-size:12.5px;color:var(--muted);margin:4px 0 0;line-height:1.6}
+  .sub a{color:#5fd8ac;text-decoration:none}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0 6px}
+  .search{flex:1 1 220px;min-width:180px;background:#0c1217;border:1px solid #182530;border-radius:9px;
+    padding:10px 13px;color:var(--ink);font-family:var(--sans);font-size:13.5px;outline:none}
+  .search:focus{border-color:#27513c}
+  .chips{display:flex;gap:7px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:12px;padding:8px 13px;border-radius:8px;
+    background:#0c1217;border:1px solid #182530;color:var(--muted);cursor:pointer;transition:.15s}
+  .chip:hover{border-color:#2a3a44;color:var(--ink)}
+  .chip.active{background:#13211b;border-color:#27513c;color:var(--ink)}
+  .count{font-family:var(--mono);font-size:11.5px;color:var(--ghost);margin:2px 0 0}
+
+  .cards{margin-top:12px;display:grid;gap:12px}
+  .card{background:#0c1217;border:1px solid #182530;border-radius:12px;overflow:hidden}
+  .chead{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+    background:none;border:none;color:var(--ink);font-family:var(--sans);padding:15px 16px}
+  .chead:focus-visible{outline:2px solid var(--safe);outline-offset:-2px}
+  .nm{font-size:16px;font-weight:700}
+  .nm small{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-weight:400;margin-left:7px}
+  .headmeta{margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+  .ref{font-family:var(--mono);font-size:12px;color:var(--safe)}
+  .reflabel{color:var(--ghost)}
+  .crit{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.5px;
+    padding:3px 8px;border-radius:6px;background:#ff3b5322;color:var(--crit);white-space:nowrap}
+  .caret{color:var(--ghost);font-family:var(--mono);font-size:13px;transition:.2s;flex:0 0 auto}
+  .card.open .caret{transform:rotate(90deg);color:var(--muted)}
+
+  .cbody{display:none;padding:0 16px 16px;border-top:1px solid #131d22}
+  .card.open .cbody{display:block}
+  .dir{margin-top:14px}
+  .dirhead{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;margin-bottom:8px}
+  .dir.hi .dirhead{color:var(--high)}
+  .dir.lo .dirhead{color:var(--low)}
+  .sec{font-size:13px;line-height:1.5;color:#9fb1a8;margin:0 0 7px;padding-left:2px}
+  .sec b{color:#cdded6;font-weight:600;font-family:var(--mono);font-size:11.5px;letter-spacing:.5px;margin-right:6px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .tag{font-size:12px;padding:4px 9px;border-radius:6px;background:#0a0f14;border:1px solid #18242d;color:#aebcb4}
+  .dir.hi .tag.mg{border-color:#3a2519;color:#f0b48c}
+  .dir.lo .tag.mg{border-color:#1a2e3f;color:#9cc7ea}
+  .note{margin-top:13px;font-size:12px;line-height:1.6;color:var(--muted);border-left:2px solid #1d3329;padding-left:10px}
+  .link{display:inline-block;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--safe);
+    text-decoration:none;border:1px solid #1d3329;border-radius:7px;padding:7px 12px;transition:.15s}
+  .link:hover{background:#13211b;border-color:#27513c}
+
+  .empty{font-family:var(--mono);font-size:12.5px;color:var(--ghost);padding:30px 4px}
+  footer{margin-top:26px;font-size:11.5px;color:#465751;line-height:1.7}
+  footer a{color:#5a6d65}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>實驗室檢查對照</h1>
+    <p class="sub">點檢驗展開「↑ 高 / ↓ 低 → 原因 · 處置」。電解質項目可連入 <a href="../ecg/">心電圖模擬器</a>。</p>
+  </header>
+
+  <div class="toolbar">
+    <input class="search" id="search" type="search" placeholder="搜尋檢驗名稱或原因(如:利尿劑、SIADH、腎衰竭)…" aria-label="搜尋">
+    <div class="chips" id="chips"></div>
+  </div>
+  <p class="count" id="count"></p>
+
+  <div class="cards" id="cards"></div>
+
+  <footer>
+    教學示意用,參考值因實驗室、年齡、檢體與單位而異,僅為常見範例;critical(panic)值各院標準不一。實際判讀請以該院報告區間與臨床情境為準。<br>
+    <a href="../">← 返回總覽</a> · <a href="../ecg/">電解質心電圖</a> · <a href="../flow/">判讀流程</a> · <a href="../acls/">ACLS 心律</a>
+  </footer>
+</div>
+
+<script>
+// ===== 資料層:新增檢驗只要往這裡加一筆 =====================================
+// 每筆:id,name,panel,unit,ref:[low,high],critical:{low,high},
+//      high/low:{causes:[],mgmt:[]},note?,link?(連到其他互動頁)
+const LABS=[
+  {id:'na',name:'血鈉',en:'Na⁺',panel:'電解質',unit:'mEq/L',ref:[135,145],critical:{low:120,high:160},
+    high:{causes:['水分不足/脫水','尿崩症(DI)','不顯性失水增加','攝水不足(老人、無法取水)','高張鈉攝入'],
+          mgmt:['補充水分,慢速矯正 < 10–12 mEq/L/日(避免腦水腫)','中樞型 DI 給 desmopressin']},
+    low:{causes:['SIADH','水腫狀態(心衰、肝硬化、腎病症候群)','利尿劑(thiazide)','低血容失鈉','原發性多渴'],
+         mgmt:['依血容與症狀處理:SIADH 限水','嚴重症狀性給 3% saline','慢速矯正避免 osmotic demyelination']},
+    note:'判讀前先評估血容與血漿滲透壓;矯正速度比絕對數值更關鍵。'},
+  {id:'k',name:'血鉀',en:'K⁺',panel:'電解質',unit:'mEq/L',ref:[3.5,5.0],critical:{low:2.5,high:6.5},
+    high:{causes:['腎衰竭/排泄下降','酸中毒(細胞內外轉移)','溶血、橫紋肌溶解、腫瘤溶解','保鉀利尿劑、ACEI/ARB','假性高鉀(溶血檢體)'],
+          mgmt:['IV calcium gluconate 穩定心肌膜','insulin + glucose、nebulized β2 agonist','Kayexalate、利尿、透析','持續心電監測']},
+    low:{causes:['利尿劑','嘔吐、腹瀉','低血鎂','鹼中毒、insulin'],
+         mgmt:['補充 KCl(口服或 IV 限速)','併矯正低血鎂否則難回升']},
+    note:'高低血鉀都會反映在心電圖(帳篷狀 T、U 波、QRS 增寬…)。',link:{href:'../ecg/#K',label:'→ 看血鉀心電圖變化'}},
+  {id:'cl',name:'血氯',en:'Cl⁻',panel:'電解質',unit:'mEq/L',ref:[98,107],critical:null,
+    high:{causes:['正常陰離子間隙代謝性酸中毒','大量生理食鹽水輸注','脫水'],
+          mgmt:['治療原發病因','檢視輸液種類']},
+    low:{causes:['嘔吐(失 HCl)、鼻胃管引流','利尿劑','代謝性鹼中毒'],
+         mgmt:['補液矯正','治療原發病因']},
+    note:'常與酸鹼、陰離子間隙一起判讀,單看意義有限。'},
+  {id:'ca',name:'血鈣(總)',en:'Ca²⁺',panel:'電解質',unit:'mg/dL',ref:[8.5,10.5],critical:{low:6.0,high:13.0},
+    high:{causes:['原發性副甲狀腺亢進','惡性腫瘤(PTHrP、骨轉移)','維生素 D 過多','結節病、長期臥床'],
+          mgmt:['IV normal saline 輸液促進排鈣','loop diuretic(水化足夠後)','bisphosphonate、calcitonin','治療原發病因']},
+    low:{causes:['副甲狀腺功能低下','慢性腎臟病','維生素 D 不足','低血鎂','急性胰臟炎'],
+         mgmt:['補鈣(口服或 IV calcium gluconate)','矯正低血鎂','補充維生素 D']},
+    note:'低白蛋白會低估總鈣,需校正:corrected Ca = 測得值 + 0.8×(4 − albumin);必要時測 ionized Ca。',
+    link:{href:'../ecg/#Ca',label:'→ 看血鈣心電圖變化'}},
+  {id:'mg',name:'血鎂',en:'Mg²⁺',panel:'電解質',unit:'mg/dL',ref:[1.7,2.2],critical:{low:1.0,high:4.9},
+    high:{causes:['腎衰竭','過量補鎂(子癇前症治療、含鎂制酸劑/瀉劑)'],
+          mgmt:['停止鎂來源','IV calcium 拮抗','嚴重或腎衰竭 → 透析'],},
+    low:{causes:['利尿劑','慢性酒精','腹瀉/吸收不良','長期 PPI'],
+         mgmt:['補充鎂','常為難治性低鉀/低鈣的根因,需先補鎂']},
+    note:'高血鎂:深部肌腱反射消失、低血壓、呼吸抑制是警訊。'},
+  {id:'phos',name:'血磷',en:'PO₄',panel:'電解質',unit:'mg/dL',ref:[2.5,4.5],critical:null,
+    high:{causes:['腎衰竭','腫瘤溶解、橫紋肌溶解','副甲狀腺功能低下'],
+          mgmt:['phosphate binder','治療原發病因、透析','注意伴隨低血鈣']},
+    low:{causes:['再餵食症候群(refeeding)','DKA 治療過程','慢性酒精','呼吸性鹼中毒'],
+         mgmt:['補充磷','再餵食高風險者預防性監測與補充']},
+    note:'再餵食症候群:低磷、低鉀、低鎂同時發生,補充營養前後須監測。'},
+];
+
+const PANELS=['電解質']; // 之後擴充:腎功能、肝功能、CBC、ABG…
+// ==========================================================================
+
+const cardsEl=document.getElementById('cards'),countEl=document.getElementById('count');
+let panel='電解質',query='';
+
+function fmtRef(r){return r?`${r[0]}–${r[1]}`:'—';}
+function fmtCrit(c,u){if(!c)return'';
+  const ps=[];if(c.low!=null)ps.push(`< ${c.low}`);if(c.high!=null)ps.push(`> ${c.high}`);
+  return ps.length?`critical ${ps.join(' / ')} ${u}`:'';}
+
+function dirBlock(d,o){
+  if(!o)return'';
+  const arrow=d==='hi'?'↑ 偏高':'↓ 偏低';
+  const causes=o.causes.map(c=>`<span class="tag">${c}</span>`).join('');
+  const mgmt=o.mgmt.map(m=>`<span class="tag mg">${m}</span>`).join('');
+  return `<div class="dir ${d}">
+    <div class="dirhead">${arrow}</div>
+    <p class="sec"><b>原因</b></p><div class="tags">${causes}</div>
+    <p class="sec" style="margin-top:9px"><b>處置</b></p><div class="tags">${mgmt}</div>
+  </div>`;
+}
+
+function render(){
+  const q=query.trim().toLowerCase();
+  const list=LABS.filter(l=>{
+    if(panel&&l.panel!==panel)return false;
+    if(!q)return true;
+    const hay=[l.name,l.en,l.panel,...(l.high?[...l.high.causes,...l.high.mgmt]:[]),
+      ...(l.low?[...l.low.causes,...l.low.mgmt]:[]),l.note||''].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+  countEl.textContent=`${list.length} 項`+(q?` · 符合「${query.trim()}」`:'');
+  if(!list.length){cardsEl.innerHTML='<p class="empty">找不到符合的檢驗。</p>';return;}
+  cardsEl.innerHTML=list.map(l=>{
+    const crit=fmtCrit(l.critical,l.unit);
+    const link=l.link?`<a class="link" href="${l.link.href}">${l.link.label}</a>`:'';
+    return `<article class="card" data-id="${l.id}">
+      <button class="chead" aria-expanded="false">
+        <span class="nm">${l.name}<small>${l.en} · ${l.unit}</small></span>
+        <span class="headmeta">
+          <span class="ref"><span class="reflabel">參考 </span>${fmtRef(l.ref)}</span>
+          ${crit?`<span class="crit">${crit}</span>`:''}
+          <span class="caret">▸</span>
+        </span>
+      </button>
+      <div class="cbody">
+        ${dirBlock('hi',l.high)}
+        ${dirBlock('lo',l.low)}
+        ${l.note?`<p class="note">${l.note}</p>`:''}
+        ${link}
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function buildChips(){
+  document.getElementById('chips').innerHTML=PANELS.map(p=>
+    `<button class="chip${p===panel?' active':''}" data-p="${p}">${p}</button>`).join('');
+}
+
+// events
+cardsEl.addEventListener('click',e=>{
+  const h=e.target.closest('.chead');if(!h)return;
+  const card=h.parentElement,open=card.classList.toggle('open');
+  h.setAttribute('aria-expanded',open);
+});
+document.getElementById('chips').addEventListener('click',e=>{
+  const c=e.target.closest('.chip');if(!c)return;
+  panel=c.dataset.p;buildChips();render();
+});
+document.getElementById('search').addEventListener('input',e=>{query=e.target.value;render();});
+
+buildChips();render();
+</script>
+</body>
+</html>
