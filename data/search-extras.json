@@ -49,5 +49,13 @@
   { "kind": "計算機", "title": "校正鈣 Corrected Ca", "sub": "labs 計算機", "url": "labs/#calc-cca",
     "aliases": ["corrected calcium", "校正鈣", "Ca correction", "albumin correction", "ionized Ca"] },
   { "kind": "計算機", "title": "陰離子間隙 Anion Gap", "sub": "labs 計算機", "url": "labs/#calc-ag",
-    "aliases": ["AG", "anion gap", "陰離子間隙", "MUDPILES", "albumin-corrected AG"] }
+    "aliases": ["AG", "anion gap", "陰離子間隙", "MUDPILES", "albumin-corrected AG"] },
+  { "kind": "計算機", "title": "eGFR CKD-EPI 2021", "sub": "labs 計算機 · 腎功能分期", "url": "labs/#calc-egfr",
+    "aliases": ["eGFR", "GFR", "CKD-EPI", "creatinine clearance", "CrCl", "CKD stage", "腎絲球過濾率", "腎功能分期", "race-free"] },
+  { "kind": "計算機", "title": "FENa / FEUrea (AKI 鑑別)", "sub": "labs 計算機 · prerenal vs ATN", "url": "labs/#calc-fena",
+    "aliases": ["FENa", "FEUrea", "fractional excretion", "AKI", "prerenal", "ATN", "acute tubular necrosis", "腎前性", "急性腎損傷"] },
+  { "kind": "計算機", "title": "校正網狀紅血球 / RPI", "sub": "labs 計算機 · 貧血代償", "url": "labs/#calc-rpi",
+    "aliases": ["RPI", "reticulocyte production index", "corrected reticulocyte", "CRC", "網狀紅血球", "校正", "貧血代償"] },
+  { "kind": "計算機", "title": "運鐵蛋白飽和度 TSat", "sub": "labs 計算機 · 鐵代謝", "url": "labs/#calc-tsat",
+    "aliases": ["TSat", "transferrin saturation", "TIBC", "ferritin", "iron", "鐵蛋白", "鐵負荷", "缺鐵", "IDA", "ACD", "hemochromatosis"] }
 ]

@@ -86,6 +86,9 @@
   .field input{width:108px;background:#0a0f14;border:1px solid #18242d;border-radius:8px;
     padding:9px 11px;color:var(--ink);font-family:var(--mono);font-size:14px;outline:none}
   .field input:focus{border-color:#27513c}
+  .field select{background:#0a0f14;border:1px solid #18242d;border-radius:8px;padding:9px 11px;
+    color:var(--ink);font-family:var(--mono);font-size:14px;outline:none;cursor:pointer}
+  .field select:focus{border-color:#27513c}
   .field .u{font-family:var(--mono);font-size:10px;color:var(--ghost)}
   .calcout{margin-top:15px;font-family:var(--mono);font-size:13px;line-height:1.8;color:#cdded6;
     border-top:1px solid #131d22;padding-top:13px}
@@ -132,6 +135,53 @@
       </div>
       <div class="calcout" id="ag_out">輸入 Na、Cl、HCO₃ 後自動計算。</div>
     </div>
+
+    <div class="calcbox" id="calc-egfr">
+      <h3>eGFR · CKD-EPI 2021(去 race)</h3>
+      <p class="formula">2021 race-free 版 · 不適用 AKI 急性期、極端肌肉量 → 改驗 cystatin C</p>
+      <div class="frow">
+        <div class="field"><label>肌酸酐 Cr</label><input id="egfr_cr" type="number" step="0.01" inputmode="decimal" placeholder="如 1.0"><span class="u">mg/dL</span></div>
+        <div class="field"><label>年齡</label><input id="egfr_age" type="number" step="1" inputmode="numeric" placeholder="如 65"><span class="u">歲</span></div>
+        <div class="field"><label>性別</label><select id="egfr_sex"><option value="M">男</option><option value="F">女</option></select></div>
+      </div>
+      <div class="calcout" id="egfr_out">輸入肌酸酐、年齡、性別後自動計算。</div>
+    </div>
+
+    <div class="calcbox" id="calc-fena">
+      <h3>FENa / FEUrea · AKI 鑑別</h3>
+      <p class="formula">FENa = (尿 Na × 血 Cr) / (血 Na × 尿 Cr) × 100 · 利尿劑 / 慢性腎病者建議用 FEUrea</p>
+      <div class="frow">
+        <div class="field"><label>血 Na</label><input id="fe_pna" type="number" inputmode="decimal" placeholder="140"><span class="u">mEq/L</span></div>
+        <div class="field"><label>尿 Na</label><input id="fe_una" type="number" inputmode="decimal" placeholder="20"><span class="u">mEq/L</span></div>
+        <div class="field"><label>血 Cr</label><input id="fe_pcr" type="number" step="0.01" inputmode="decimal" placeholder="2.0"><span class="u">mg/dL</span></div>
+        <div class="field"><label>尿 Cr</label><input id="fe_ucr" type="number" inputmode="decimal" placeholder="80"><span class="u">mg/dL</span></div>
+        <div class="field"><label>血 BUN(選填)</label><input id="fe_pbun" type="number" inputmode="decimal" placeholder="40"><span class="u">mg/dL</span></div>
+        <div class="field"><label>尿 urea(選填)</label><input id="fe_uurea" type="number" inputmode="decimal" placeholder="200"><span class="u">mg/dL</span></div>
+      </div>
+      <div class="calcout" id="fena_out">輸入 4 項 FENa 必要值後自動計算;加入血 BUN / 尿 urea 會額外算 FEUrea。</div>
+    </div>
+
+    <div class="calcbox" id="calc-rpi">
+      <h3>校正網狀紅血球 / RPI</h3>
+      <p class="formula">CRC = retic% × (Hct / 45) · RPI = CRC / 成熟因子(Hct 越低 MF 越大)</p>
+      <div class="frow">
+        <div class="field"><label>網狀紅血球</label><input id="rpi_ret" type="number" step="0.1" inputmode="decimal" placeholder="如 4.0"><span class="u">%</span></div>
+        <div class="field"><label>Hct</label><input id="rpi_hct" type="number" step="0.1" inputmode="decimal" placeholder="如 25"><span class="u">%</span></div>
+      </div>
+      <div class="calcout" id="rpi_out">輸入網狀紅血球% 與 Hct 後自動計算。</div>
+    </div>
+
+    <div class="calcbox" id="calc-tsat">
+      <h3>運鐵蛋白飽和度 Transferrin Saturation</h3>
+      <p class="formula">TSat = 血鐵 / TIBC × 100 · 配合 ferritin 鑑別 IDA / ACD / 鐵負荷</p>
+      <div class="frow">
+        <div class="field"><label>血鐵 Fe</label><input id="tsat_fe" type="number" inputmode="decimal" placeholder="60"><span class="u">µg/dL</span></div>
+        <div class="field"><label>TIBC</label><input id="tsat_tibc" type="number" inputmode="decimal" placeholder="300"><span class="u">µg/dL</span></div>
+        <div class="field"><label>Ferritin(選填)</label><input id="tsat_fer" type="number" inputmode="decimal" placeholder="100"><span class="u">ng/mL</span></div>
+      </div>
+      <div class="calcout" id="tsat_out">輸入血鐵與 TIBC 後自動計算;加入 ferritin 給出 IDA / ACD 提示。</div>
+    </div>
+
     <p class="formula" style="color:#465751;padding:0 2px">需完整酸鹼判讀(代償、delta-gap)請用 <a href="../abg/" style="color:#5fd8ac">ABG 判讀器 →</a></p>
   </div>
 
@@ -190,7 +240,8 @@ function pfBlock(items){
 function render(){
   if(panel==='計算機'){
     calcEl.classList.add('show');cardsEl.style.display='none';searchEl.style.display='none';
-    countEl.textContent='臨床計算機';calcCorrCa();calcAG();return;
+    countEl.textContent='臨床計算機 · 6 項';
+    calcCorrCa();calcAG();calcEgfr();calcFE();calcRPI();calcTSat();return;
   }
   calcEl.classList.remove('show');cardsEl.style.display='';searchEl.style.display='';
   // 保留目前展開的卡片狀態(避免釘選/篩選時收合)
@@ -265,8 +316,91 @@ function calcAG(){
   if(ag>12)lines.push('<span style="color:#7f9489">高 AG 代謝性酸中毒 → 想 MUDPILES(乳酸、酮酸、腎衰、毒物…)</span>');
   out.innerHTML=lines.join('<br>');
 }
+function calcEgfr(){
+  const cr=num('egfr_cr'),age=num('egfr_age'),out=document.getElementById('egfr_out');
+  const sex=document.getElementById('egfr_sex').value;
+  if(cr==null||age==null||cr<=0||age<=0){out.innerHTML='輸入肌酸酐、年齡、性別後自動計算。';return;}
+  let k,a;
+  if(sex==='F'){k=0.7;a=cr<=k?-0.241:-1.200;}
+  else{k=0.9;a=cr<=k?-0.302:-1.200;}
+  let g=142*Math.pow(cr/k,a)*Math.pow(0.9938,age);
+  if(sex==='F')g*=1.012;
+  let stage,c;
+  if(g>=90){stage='G1(正常 / 高)';c='var(--safe)';}
+  else if(g>=60){stage='G2(輕度下降)';c='var(--safe)';}
+  else if(g>=45){stage='G3a(輕中度)';c='var(--high)';}
+  else if(g>=30){stage='G3b(中重度)';c='var(--high)';}
+  else if(g>=15){stage='G4(重度)';c='var(--crit)';}
+  else{stage='G5(腎衰竭 / 透析評估)';c='var(--crit)';}
+  out.innerHTML=`eGFR <span class="big">${g.toFixed(0)}</span> mL/min/1.73m² ${verdict(stage,c)}<br>`+
+    `<span style="color:#7f9489">CKD 分期需配合白蛋白尿分級(A1/A2/A3);AKI 急性期 / 極端肌肉量會誤判。</span>`;
+}
+function calcFE(){
+  const pna=num('fe_pna'),una=num('fe_una'),pcr=num('fe_pcr'),ucr=num('fe_ucr'),
+        pbun=num('fe_pbun'),uurea=num('fe_uurea'),out=document.getElementById('fena_out');
+  if(pna==null||una==null||pcr==null||ucr==null||pna<=0||ucr<=0){
+    out.innerHTML='輸入 4 項 FENa 必要值後自動計算;加入血 BUN / 尿 urea 會額外算 FEUrea。';return;
+  }
+  const fena=(una*pcr)/(pna*ucr)*100;
+  let v,c;
+  if(fena<1){v='< 1% → prerenal(腎前性)';c='var(--low)';}
+  else if(fena>2){v='> 2% → ATN(腎性)';c='var(--high)';}
+  else{v='1–2% → 不明 / 早期 ATN';c='var(--muted)';}
+  const lines=[`FENa <span class="big">${fena.toFixed(2)}</span> % ${verdict(v,c)}`];
+  if(pbun!=null&&uurea!=null&&pbun>0){
+    const feu=(uurea*pcr)/(pbun*ucr)*100;
+    let vu,cu;
+    if(feu<35){vu='< 35% → prerenal';cu='var(--low)';}
+    else if(feu>50){vu='> 50% → ATN';cu='var(--high)';}
+    else{vu='35–50% → 不明';cu='var(--muted)';}
+    lines.push(`FEUrea <span class="big">${feu.toFixed(1)}</span> % ${verdict(vu,cu)}`);
+    lines.push('<span style="color:#7f9489">利尿劑、慢性腎病、慢性鈉攝取低時 FEUrea 較不受干擾。</span>');
+  }else{
+    lines.push('<span style="color:#7f9489">利尿劑使用者建議改用 FEUrea(填入血 BUN 與尿 urea)。</span>');
+  }
+  out.innerHTML=lines.join('<br>');
+}
+function calcRPI(){
+  const ret=num('rpi_ret'),hct=num('rpi_hct'),out=document.getElementById('rpi_out');
+  if(ret==null||hct==null||ret<0||hct<=0){out.innerHTML='輸入網狀紅血球% 與 Hct 後自動計算。';return;}
+  const crc=ret*(hct/45);
+  let mf;
+  if(hct>=36)mf=1.0;else if(hct>=26)mf=1.5;else if(hct>=16)mf=2.0;else mf=2.5;
+  const rpi=crc/mf;
+  let v,c;
+  if(rpi>=3){v='≥ 3 → 充分代償(失血 / 溶血)';c='var(--safe)';}
+  else if(rpi>=2){v='2–3 → 邊界';c='var(--muted)';}
+  else{v='< 2 → 生成不足(hypoproliferative)';c='var(--high)';}
+  out.innerHTML=`校正網狀紅血球 (CRC) ${crc.toFixed(1)} %<br>`+
+    `RPI <span class="big">${rpi.toFixed(1)}</span> ${verdict(v,c)}<br>`+
+    `<span style="color:#7f9489">成熟因子(MF):Hct ≥36→1.0、26–35→1.5、16–25→2.0、≤15→2.5</span>`;
+}
+function calcTSat(){
+  const fe=num('tsat_fe'),tibc=num('tsat_tibc'),fer=num('tsat_fer'),out=document.getElementById('tsat_out');
+  if(fe==null||tibc==null||tibc<=0){out.innerHTML='輸入血鐵與 TIBC 後自動計算;加入 ferritin 給出 IDA / ACD 提示。';return;}
+  const ts=fe/tibc*100;
+  let v,c;
+  if(ts<20){v='< 20% → 鐵不足';c='var(--low)';}
+  else if(ts>45){v='> 45% → 鐵負荷可能';c='var(--high)';}
+  else{v='正常範圍';c='var(--safe)';}
+  const lines=[`TSat <span class="big">${ts.toFixed(0)}</span> % ${verdict(v,c)}`];
+  if(fer!=null){
+    let hint;
+    if(ts<20&&fer<30)hint='TSat ↓ + ferritin ↓ → 缺鐵性貧血 (IDA)';
+    else if(ts<20&&fer>=100)hint='TSat ↓ + ferritin 正常 / 高 → 慢性病貧血 (ACD) 較可能(ferritin 為急性期蛋白)';
+    else if(ts>45&&fer>500)hint='TSat ↑ + ferritin ↑ → 鐵負荷 / hemochromatosis 需評估';
+    else hint='非典型 pattern,結合臨床(發炎、輸血史、血液病)判讀';
+    lines.push(`<span style="color:#7f9489">${hint}</span>`);
+  }
+  out.innerHTML=lines.join('<br>');
+}
 ['cca_ca','cca_alb'].forEach(id=>document.getElementById(id).addEventListener('input',calcCorrCa));
 ['ag_na','ag_cl','ag_hco3','ag_alb'].forEach(id=>document.getElementById(id).addEventListener('input',calcAG));
+['egfr_cr','egfr_age'].forEach(id=>document.getElementById(id).addEventListener('input',calcEgfr));
+document.getElementById('egfr_sex').addEventListener('change',calcEgfr);
+['fe_pna','fe_una','fe_pcr','fe_ucr','fe_pbun','fe_uurea'].forEach(id=>document.getElementById(id).addEventListener('input',calcFE));
+['rpi_ret','rpi_hct'].forEach(id=>document.getElementById(id).addEventListener('input',calcRPI));
+['tsat_fe','tsat_tibc','tsat_fer'].forEach(id=>document.getElementById(id).addEventListener('input',calcTSat));
 
 // events
 cardsEl.addEventListener('click',e=>{
@@ -286,7 +420,7 @@ document.getElementById('search').addEventListener('input',e=>{query=e.target.va
 function activateFromHash(){
   const h=decodeURIComponent(location.hash.slice(1));
   if(!h)return;
-  if(h==='calc-cca'||h==='calc-ag'){
+  if(h.startsWith('calc-')){
     panel='計算機';buildChips();render();
     setTimeout(()=>{const el=document.getElementById(h);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},60);
     return;
