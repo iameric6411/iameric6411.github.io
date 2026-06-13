@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>電解質心電圖對照教學頁</title>
+<meta name="description" content="電解質心電圖對照模擬器:拖動血鉀 / 血鈣濃度,即時觀察波形連續變化 — 帳篷狀 T、U 波、sine wave、QT 縮短 / 延長等關鍵 ECG 變化。">
+
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://iameric6411.github.io/ecg/">
@@ -122,7 +124,7 @@
 
   <div class="monitor">
     <div class="screen">
-      <canvas id="ecg" width="1640" height="540"></canvas>
+      <canvas id="ecg" width="1640" height="540" role="img" aria-label="心電圖波形監視器"></canvas>
       <div class="hud">
         <div class="lead">II</div>
         <div class="readout">
@@ -369,6 +371,8 @@ function setVal(v){
   document.getElementById('stageBox').style.borderColor=st.c+'55';
   document.querySelectorAll('#feat li').forEach(li=>{
     const on=li._on(v);li.classList.toggle('on',on);li.style.setProperty('--cl',st.c);});
+  document.getElementById('ecg').setAttribute('aria-label',
+    `${c.label} ${v.toFixed(1)} ${c.unit}(${st.name}):${st.desc.replace(/<[^>]+>/g,'')}`);
   if(reduce)drawStatic();
 }
 

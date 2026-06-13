@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://iameric6411.github.io/sitemap.xml

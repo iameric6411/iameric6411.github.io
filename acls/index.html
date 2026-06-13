@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ACLS 心律辨識對照頁</title>
+<meta name="description" content="ACLS 心律辨識對照頁:15 種節律(可電擊 / 不可電擊 / 心搏過緩 / 過速),即時波形 + 處置重點,符合 AHA 2020 指引。">
+
 <style>
   :root{
     --bg:#070a0d;--bezel:#0e1419;--grid:#15211c;--grid-strong:#1d3329;
@@ -79,7 +81,7 @@
 
   <div class="monitor">
     <div class="screen">
-      <canvas id="ecg" width="1840" height="500"></canvas>
+      <canvas id="ecg" width="1840" height="500" role="img" aria-label="ACLS 心律監視器"></canvas>
       <div class="hud">
         <div class="rname" id="rname"></div>
         <div class="rrate" id="rrate"></div>
@@ -275,6 +277,7 @@ function select(id){
   const ul=document.getElementById('feat');ul.innerHTML='';
   cfg.feats.forEach(f=>{const li=document.createElement('li');li.textContent=f;li.style.setProperty('--cl',col);ul.appendChild(li);});
   document.getElementById('action').textContent=cfg.action;
+  document.getElementById('ecg').setAttribute('aria-label',`${cfg.name} 波形 · ${cfg.rate} · ${cfg.reg}`);
   // reset stream
   events=[];te=0;st=cfg.mk?cfg.mk():{};trace.fill(baseY);
   if(reduce)drawStatic();
