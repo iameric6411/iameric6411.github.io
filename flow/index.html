@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心電圖判讀流程 · 互動決策樹</title>
+<style>
+  :root{
+    --bg:#070a0d;--bezel:#0e1419;--ink:#e7f3ee;--muted:#7f9489;
+    --shock:#ff3b53;--nonshock:#f5c042;--brady:#46b0ff;--tachy:#b48cff;
+    --accent:#2bd07a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 18px 56px}
+  h1{font-size:19px;font-weight:700;margin:0}
+  .sub{font-size:12.5px;color:var(--muted);margin:4px 0 0;line-height:1.6}
+  .sub a{color:#5fd8ac;text-decoration:none}
+
+  .crumbs{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 4px;font-family:var(--mono);font-size:11.5px}
+  .crumb{background:#0c1217;border:1px solid #182530;color:var(--muted);
+    padding:4px 9px;border-radius:6px;cursor:pointer;transition:.15s}
+  .crumb:hover{border-color:#2a3a44;color:var(--ink)}
+  .crumb.cur{color:var(--ink);border-color:#27513c;background:#13211b;cursor:default}
+  .crumb .arr{color:#3a4a44;margin-right:6px}
+
+  .qcard{margin-top:16px;background:#0c1217;border:1px solid #182530;border-radius:14px;padding:22px 20px}
+  .qhint{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--accent);text-transform:uppercase;margin:0 0 8px}
+  .q{font-size:21px;font-weight:700;margin:0 0 18px;line-height:1.4}
+
+  .opts{display:grid;gap:10px}
+  .opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    background:#0a0f14;border:1px solid #18242d;color:#cdded6;border-radius:10px;
+    padding:14px 16px;font-size:14.5px;font-family:var(--sans);cursor:pointer;transition:.15s;line-height:1.45}
+  .opt:hover{border-color:var(--accent);color:var(--ink);transform:translateX(2px)}
+  .opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .opt .ico{flex:0 0 auto;font-family:var(--mono);font-size:16px;color:var(--accent)}
+
+  .nav{display:flex;gap:10px;margin-top:18px}
+  .nav button{font-family:var(--mono);font-size:12.5px;padding:9px 15px;border-radius:8px;cursor:pointer;
+    background:#0c1217;border:1px solid #182530;color:var(--muted);transition:.15s}
+  .nav button:hover{border-color:#2a3a44;color:var(--ink)}
+  .nav button:disabled{opacity:.35;cursor:default}
+
+  /* leaf result */
+  .result .qhint{color:var(--g)}
+  .gbadge{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;
+    padding:4px 10px;border-radius:6px;margin-bottom:12px;background:var(--gd);color:var(--g)}
+  .tip{font-size:14px;line-height:1.7;color:#aebcb4;margin:0 0 18px}
+  .rhy{display:block;text-decoration:none;background:#0a0f14;border:1px solid #18242d;border-left:4px solid var(--g);
+    border-radius:10px;padding:14px 16px;margin-bottom:10px;transition:.15s}
+  .rhy:hover{border-color:#2a3a44;border-left-color:var(--g);background:#0d141a;transform:translateX(2px)}
+  .rhy .rn{font-size:15px;font-weight:700;color:var(--ink)}
+  .rhy .go{font-family:var(--mono);font-size:11.5px;color:var(--g);margin-top:4px;display:block}
+
+  footer{margin-top:26px;font-size:11.5px;color:#465751;line-height:1.7}
+  footer a{color:#5a6d65}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>心電圖判讀流程 · 互動決策樹</h1>
+    <p class="sub">依序回答:規律嗎? → QRS 寬窄? → P 波? 一路導向對應節律,點結果即可連入 <a href="../acls/">ACLS 監視器</a>看波形與處置。</p>
+  </header>
+
+  <div class="crumbs" id="crumbs"></div>
+  <div id="node"></div>
+
+  <div class="nav">
+    <button id="back">← 上一步</button>
+    <button id="reset">↻ 重新開始</button>
+  </div>
+
+  <footer>
+    教學示意用,為簡化的決策樹,實際判讀仍須結合 12 導程、臨床情境與脈搏評估。Wenckebach / Mobitz II 屬「規則性不規律」,此處歸於不規律分支以利辨識。<br>
+    <a href="../">← 返回總覽</a> · <a href="../acls/">ACLS 心律辨識</a> · <a href="../ecg/">電解質心電圖</a>
+  </footer>
+</div>
+
+<script>
+const GCOLOR={shock:'#ff3b53',nonshock:'#f5c042',brady:'#46b0ff',tachy:'#b48cff'};
+const GLABEL={shock:'可電擊',nonshock:'不可電擊',brady:'心搏過緩',tachy:'心搏過速'};
+const RHY={
+  vfc:{name:'心室顫動(粗)',g:'shock'},
+  vff:{name:'心室顫動(細)',g:'shock'},
+  pvt:{name:'無脈搏室性心搏過速',g:'shock'},
+  tdp:{name:'尖端扭轉 Torsades',g:'shock'},
+  asys:{name:'心搏停止 Asystole',g:'nonshock'},
+  pea:{name:'無脈搏電氣活動 PEA',g:'nonshock'},
+  sbrady:{name:'竇性心搏過緩',g:'brady'},
+  avb1:{name:'一度房室阻斷',g:'brady'},
+  mob1:{name:'二度 I 型(Wenckebach)',g:'brady'},
+  mob2:{name:'二度 II 型(Mobitz II)',g:'brady'},
+  cavb:{name:'完全房室阻斷(三度)',g:'brady'},
+  svt:{name:'室上性心搏過速 SVT',g:'tachy'},
+  af:{name:'心房顫動',g:'tachy'},
+  afl:{name:'心房撲動',g:'tachy'},
+  mvt:{name:'室性心搏過速(有脈)',g:'tachy'},
+};
+
+const TREE={
+  start:{hint:'Step 0 · 先排除致命波形',q:'螢幕上有規律、可辨識的 QRS 波嗎?',opts:[
+    {l:'完全沒有 QRS,雜亂、振幅不一的顫動波',crumb:'雜亂顫動',go:'leaf_vf'},
+    {l:'幾乎是一條平線',crumb:'平線',go:'leaf_asys'},
+    {l:'波形看似有組織,卻摸不到脈搏',crumb:'有波無脈',go:'leaf_pea'},
+    {l:'有可辨識的 QRS,進入系統性判讀',crumb:'有 QRS',go:'q_reg'},
+  ]},
+  q_reg:{hint:'Step 1 · 規律性',q:'QRS 規律嗎?(R-R 間距是否一致)',opts:[
+    {l:'規律(R-R 一致)',crumb:'規律',go:'q_width'},
+    {l:'不規律(R-R 不一致)',crumb:'不規律',go:'q_irreg'},
+  ]},
+  q_width:{hint:'Step 2 · QRS 寬窄',q:'QRS 寬窄?',opts:[
+    {l:'窄(< 0.12 秒,3 小格內)',crumb:'窄 QRS',go:'q_rn'},
+    {l:'寬(≥ 0.12 秒)',crumb:'寬 QRS',go:'q_rw'},
+  ]},
+  q_rn:{hint:'Step 3 · P 波與速率(規律 + 窄)',q:'P 波型態與心室率?',opts:[
+    {l:'快速、看不到清楚 P 波',crumb:'快·無P',go:'leaf_svt'},
+    {l:'基線呈鋸齒狀 F 波、固定傳導比',crumb:'鋸齒F波',go:'leaf_afl'},
+    {l:'慢(< 60),每個 QRS 前有正常 P、PR 正常',crumb:'慢·正常P',go:'leaf_sbrady'},
+    {l:'PR 固定延長(> 0.20s),每個 P 都下傳',crumb:'PR固定延長',go:'leaf_avb1'},
+  ]},
+  q_rw:{hint:'Step 3 · 速率與 P 波(規律 + 寬)',q:'心室率與房室關係?',opts:[
+    {l:'快速、寬大單型 QRS',crumb:'快·寬單型',go:'leaf_vt'},
+    {l:'慢,P 與 QRS 各自規律、互不相關',crumb:'慢·房室分離',go:'leaf_cavb'},
+  ]},
+  q_irreg:{hint:'Step 2 · 不規律的型態',q:'不規律呈現哪種型態?',opts:[
+    {l:'絕對不規律、無 P 波、基線纖顫(窄 QRS)',crumb:'絕對不規律無P',go:'leaf_af'},
+    {l:'PR 漸進延長,直到漏掉一次 QRS',crumb:'PR漸長後漏搏',go:'leaf_mob1'},
+    {l:'PR 固定,間歇性突然漏掉一次 QRS',crumb:'PR固定突漏搏',go:'leaf_mob2'},
+    {l:'寬、多型、振幅繞基線「扭轉」起伏',crumb:'寬·扭轉多型',go:'leaf_tdp'},
+  ]},
+
+  leaf_vf:{leaf:true,tip:'無組織化的 P / QRS / T,只有隨機、振幅不一的顫動波。粗顫較易電擊轉復;細顫近似平線,須先換導程、加大增益確認非導線問題。',rhythms:['vfc','vff']},
+  leaf_asys:{leaf:true,tip:'近乎平線、無電氣活動。確認前務必檢查導線、加大增益、換導程,排除藏在裡面的細小 VF。',rhythms:['asys']},
+  leaf_pea:{leaf:true,tip:'心電圖有組織化波形(可長得像任何節律),但臨床摸不到脈搏 — 屬臨床診斷。核心是找並矯正 5H5T。',rhythms:['pea']},
+  leaf_svt:{leaf:true,tip:'窄 QRS、規則而快速,P 波常埋在 T 或 QRS 中看不清,起止突然。',rhythms:['svt']},
+  leaf_afl:{leaf:true,tip:'心房約 300/分的鋸齒狀 F 波(下壁導程明顯),常見 2:1、4:1 固定傳導,心室率規則(如 150 或 75)。',rhythms:['afl']},
+  leaf_sbrady:{leaf:true,tip:'每個 QRS 前都有正常 P 波、PR 正常、節律規則,速率 < 60/分。',rhythms:['sbrady']},
+  leaf_avb1:{leaf:true,tip:'PR 間期固定延長(> 0.20s),每個 P 都下傳、無漏搏,多為良性。',rhythms:['avb1']},
+  leaf_vt:{leaf:true,tip:'寬大(> 0.12s)、單型、規則而快速的 QRS。先評估脈搏:有脈走 VT 流程,無脈走可電擊流程。',rhythms:['mvt','pvt']},
+  leaf_cavb:{leaf:true,tip:'P 波與 QRS 完全分離(房室分離),心房快、心室慢,各自規則,逸搏 QRS 常增寬。',rhythms:['cavb']},
+  leaf_af:{leaf:true,tip:'R-R「絕對不規律」、無 P 波、基線呈纖顫波,心室率視房室結傳導。',rhythms:['af']},
+  leaf_mob1:{leaf:true,tip:'PR 漸進延長,直到一個 P 後漏掉 QRS(群聚搏動、RR 漸縮),阻斷多在房室結,通常較穩定。',rhythms:['mob1']},
+  leaf_mob2:{leaf:true,tip:'PR 固定不變,間歇性突然漏掉一個 QRS,阻斷在 His 以下、易惡化為完全阻斷。',rhythms:['mob2']},
+  leaf_tdp:{leaf:true,tip:'多型 VT,寬 QRS 振幅繞基線「扭轉」起伏,常見於 QT 延長(低鎂/低鉀/藥物)。',rhythms:['tdp']},
+};
+
+// ---- state: history stack of {node, crumb} --------------------------
+let hist=[{node:'start',crumb:'開始'}];
+const $=id=>document.getElementById(id);
+
+function render(){
+  const cur=hist[hist.length-1].node, n=TREE[cur];
+  // crumbs
+  $('crumbs').innerHTML=hist.map((h,i)=>{
+    const last=i===hist.length-1;
+    return `<span class="crumb${last?' cur':''}" data-i="${i}">${i?'<span class="arr">▸</span>':''}${h.crumb}</span>`;
+  }).join('');
+  // node
+  if(n.leaf){renderLeaf(n);}else{renderQuestion(n);}
+  $('back').disabled=hist.length<=1;
+}
+
+function renderQuestion(n){
+  $('node').className='';
+  $('node').innerHTML=`<div class="qcard">
+    <p class="qhint">${n.hint}</p>
+    <p class="q">${n.q}</p>
+    <div class="opts">${n.opts.map((o,i)=>
+      `<button class="opt" data-go="${o.go}" data-crumb="${o.crumb}"><span class="ico">▸</span><span>${o.l}</span></button>`
+    ).join('')}</div>
+  </div>`;
+}
+
+function renderLeaf(n){
+  const cards=n.rhythms.map(id=>{
+    const r=RHY[id],c=GCOLOR[r.g];
+    return `<a class="rhy" href="../acls/#${id}" style="--g:${c}">
+      <span class="rn">${r.name}</span>
+      <span class="go">${GLABEL[r.g]} · 在 ACLS 監視器查看波形與處置 →</span>
+    </a>`;
+  }).join('');
+  const g0=GCOLOR[RHY[n.rhythms[0]].g];
+  $('node').className='result';
+  $('node').innerHTML=`<div class="qcard result" style="--g:${g0}">
+    <p class="qhint">判讀結果</p>
+    <p class="tip">${n.tip}</p>
+    ${cards}
+  </div>`;
+}
+
+// ---- events ---------------------------------------------------------
+$('node').addEventListener('click',e=>{
+  const b=e.target.closest('.opt');if(!b)return;
+  hist.push({node:b.dataset.go,crumb:b.dataset.crumb});render();
+});
+$('crumbs').addEventListener('click',e=>{
+  const c=e.target.closest('.crumb');if(!c)return;
+  const i=+c.dataset.i;if(i<hist.length-1){hist=hist.slice(0,i+1);render();}
+});
+$('back').addEventListener('click',()=>{if(hist.length>1){hist.pop();render();}});
+$('reset').addEventListener('click',()=>{hist=[{node:'start',crumb:'開始'}];render();});
+
+render();
+</script>
+</body>
+</html>

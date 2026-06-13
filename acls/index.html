@@ -63,7 +63,7 @@
 <body>
 <div class="wrap">
   <div><h1>ACLS 心律辨識對照頁</h1>
-  <p class="sub">依急救演算法分四類 · 點選任一節律即時描繪 · 點畫面可暫停</p></div>
+  <p class="sub">依急救演算法分四類 · 點選任一節律即時描繪 · 點畫面可暫停 · <a href="../flow/" style="color:#5fd8ac">心電圖判讀流程 →</a></p></div>
 
   <div class="groups" id="groups"></div>
 
@@ -280,7 +280,11 @@ GROUPS.forEach(G=>{
 });
 cv.addEventListener('click',()=>{paused=!paused;document.getElementById('pause').style.display=paused?'flex':'none';});
 
-drawGrid();select('vfc');
+// deep-link: acls/#svt 之類可直接選定節律(供判讀流程頁連入)
+const fromHash=()=>{const id=decodeURIComponent(location.hash.slice(1));return R[id]?id:null;};
+window.addEventListener('hashchange',()=>{const id=fromHash();if(id)select(id);});
+
+drawGrid();select(fromHash()||'vfc');
 if(!reduce)requestAnimationFrame(frame);
 </script>
 </body>
