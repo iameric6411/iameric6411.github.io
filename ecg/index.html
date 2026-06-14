@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>電解質心電圖對照教學頁</title>
-<meta name="description" content="電解質心電圖對照模擬器:拖動血鉀 / 血鈣濃度,即時觀察波形連續變化 — 帳篷狀 T、U 波、sine wave、QT 縮短 / 延長等關鍵 ECG 變化。">
+<meta name="description" content="電解質心電圖對照模擬器:拖動血鉀 / 血鈣 / 血鎂濃度,即時觀察波形連續變化 — 帳篷狀 T、U 波、sine wave、QT 縮短 / 延長、TdP 風險等關鍵 ECG 變化。">
 
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://iameric6411.github.io/ecg/">
-<meta property="og:title" content="電解質心電圖對照教學頁 | 血鉀 · 血鈣 ECG 互動模擬">
-<meta property="og:description" content="拖動血鉀、血鈣濃度,即時觀察心電圖如何連續變形:帳篷狀 T 波、P 波消失、sine wave、QT 縮短/延長等高低血鉀、高低血鈣的關鍵 ECG 變化,互動式對照教學工具。">
+<meta property="og:title" content="電解質心電圖對照教學頁 | 血鉀 · 血鈣 · 血鎂 ECG 互動模擬">
+<meta property="og:description" content="拖動血鉀、血鈣、血鎂濃度,即時觀察心電圖連續變形:帳篷狀 T 波、P 波消失、sine wave、QT 縮短/延長、TdP 風險、AV block 等關鍵 ECG 變化的互動對照工具。">
 <meta property="og:image" content="https://iameric6411.github.io/ecg/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -18,7 +18,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="電解質心電圖對照教學頁">
-<meta name="twitter:description" content="拖動血鉀、血鈣濃度,即時觀察 ECG 連續變化的互動教學工具。">
+<meta name="twitter:description" content="拖動血鉀、血鈣、血鎂濃度,即時觀察 ECG 連續變化的互動教學工具。">
 <meta name="twitter:image" content="https://iameric6411.github.io/ecg/og-image.png">
 <style>
   :root{
@@ -120,6 +120,7 @@
   <div class="tabs" id="tabs">
     <button class="tab active" data-ion="K">血鉀 K⁺</button>
     <button class="tab" data-ion="Ca">血鈣 Ca²⁺</button>
+    <button class="tab" data-ion="Mg">血鎂 Mg²⁺</button>
   </div>
 
   <div class="monitor">
@@ -263,6 +264,56 @@ const CFG={
         desc:'QT 明顯縮短。',mgmt:'積極給予 IV normal saline 輸液,必要時加 loop diuretic(如 furosemide)促進排鈣,並考慮 bisphosphonate 或 calcitonin。'},
       {max:99,c:'#ff3b53',pill:'危急',name:'嚴重高血鈣',
         desc:'極短 QT;心搏過緩、AV block 可能出現,極嚴重時可進展為心搏停止。',mgmt:'緊急降鈣治療(bisphosphonate、calcitonin、積極輸液 ± 利尿),並處理心律不整,必要時安排透析。'},
+    ]},
+  Mg:{label:'血鎂',ek:'Mg²⁺',unit:'mg/dL',min:0.5,max:6.0,step:0.1,def:2.0,normal:[1.7,2.2],
+    ticks:[0.5,1.7,2.2,6.0],
+    params(v){const P=normalP();
+      if(v>2.2){const d=v-2.2;
+        P.prShift=clamp(d*0.020,0,0.05);
+        P.qrsW=1+clamp(v-4.0,0,2.5)*0.55;
+        P.tAmp=0.30+clamp(d*0.03,0,0.10);
+        P.hr=v>6?48:v>5.5?58:v>4.0?66:75;}
+      else if(v<1.7){const d=1.7-v;
+        P.tAmp=clamp(0.30-d*0.22,0.02,0.30);
+        P.tCenter=clamp(0.62+d*0.08,0.62,0.85);
+        P.uAmp=clamp(d*0.20,0,0.30);
+        P.stLevel=-clamp(d*0.05,0,0.08);
+        P.hr=75;}
+      return P;},
+    feats:[
+      {l:'QT 間期延長',on:v=>v<=1.5},
+      {l:'T 波低平',on:v=>v<=1.5},
+      {l:'U 波出現',on:v=>v<=1.2},
+      {l:'Torsades 風險(類似低 K)',on:v=>v<=1.0},
+      {l:'PR 延長',on:v=>v>=3.5},
+      {l:'QRS 增寬',on:v=>v>=5.0},
+      {l:'AV block(完全)',on:v=>v>=5.5},
+      {l:'心搏停止前兆',on:v=>v>=7.0},
+    ],
+    stages:[
+      {max:1.0,c:'#ff3b53',pill:'危急',name:'嚴重低血鎂',
+        desc:'QT 明顯延長、U 波突出,易誘發 torsades;常合併難治性低鉀 / 低鈣 / 低磷。',
+        mgmt:'IV MgSO₄ 1–2 g(嚴重 TdP 可緩慢 push),心電與血壓持續監測,同步矯正低 K / 低 Ca。'},
+      {max:1.4,c:'#ff7a3c',pill:'中度',name:'中度低血鎂',
+        desc:'QT 延長、T 波低平,可有手抖、抽搐、心律不整。',
+        mgmt:'IV 或口服補鎂;評估病因(PPI 長期、利尿劑、慢性酒精、腹瀉、吸收不良)。'},
+      {max:1.7,c:'#f5c042',pill:'輕度',name:'輕度低血鎂',
+        desc:'多無明顯 ECG / 症狀;補鎂後常讓難治性低鉀 / 低鈣同步回升。',
+        mgmt:'口服 magnesium oxide / glycinate;追蹤血鎂、血鉀、血鈣。'},
+      {max:2.3,c:'#2bd07a',pill:'正常',name:'正常範圍',
+        desc:'ECG 正常。',mgmt:'例行監測即可。'},
+      {max:3.5,c:'#f5c042',pill:'輕度',name:'輕度高血鎂',
+        desc:'多無 ECG 變化;可有噁心、潮紅、輕度低血壓。',
+        mgmt:'停止鎂來源(制酸劑 / 含鎂瀉劑);監測腎功能與症狀,多數無須積極處置。'},
+      {max:5.0,c:'#ff7a3c',pill:'中度',name:'中度高血鎂',
+        desc:'PR 延長、深部肌腱反射消失、低血壓;子癇前症治療常見此區間。',
+        mgmt:'停鎂、評估腎功能;IV calcium gluconate 1 amp 拮抗心血管 / 神經肌肉效應。'},
+      {max:7.0,c:'#ff3b53',pill:'危急',name:'嚴重高血鎂',
+        desc:'QRS 增寬、AV block(1° → 完全),呼吸抑制風險上升。',
+        mgmt:'IV calcium gluconate 拮抗、利尿(NS + furosemide);腎衰竭患者緊急透析。'},
+      {max:99,c:'#ff3b53',pill:'危急',name:'極危急 · 心搏停止前兆',
+        desc:'完全 AV block、呼吸抑制、心搏停止風險。',
+        mgmt:'立即 IV calcium gluconate 多次,緊急透析,準備 ACLS 與機械通氣。'},
     ]},
 };
 

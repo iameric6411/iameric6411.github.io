@@ -156,7 +156,7 @@ const R={
     mk:()=>({n:0}),sch:(s,u)=>{while(s.n<=u){Q(s.n,WIDE);s.n+=0.33;}}},
   tdp:{g:'shock',name:'尖端扭轉(Torsades)',rate:'≈210/分',reg:'多型',
     feats:['多型 VT,QRS 振幅繞基線「扭轉」起伏','常見於 QT 延長(低鎂/低鉀/藥物)','可自行終止或惡化為 VF'],
-    action:'可電擊。無脈去顫;靜脈硫酸鎂 1–2g;矯正電解質、停延長 QT 藥物;必要時加速心率(節律器/isoproterenol)。',
+    action:'可電擊。無脈去顫;IV MgSO₄ 1–2 g(TdP first-line);矯正電解質(低 K / 低 Mg)、停延長 QT 藥物;必要時加速心率(節律器 / isoproterenol)。看 → ecg/#Mg 對照低鎂 ECG 變化。',
     base:t=>(0.25+0.75*Math.abs(Math.sin(Math.PI*t/2.4)))*0.92*Math.sin(2*Math.PI*3.2*t)},
   // ===== non-shockable =====
   asys:{g:'nonshock',name:'心搏停止(Asystole)',rate:'0',reg:'—',

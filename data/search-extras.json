@@ -34,6 +34,8 @@
     "aliases": ["hyperkalemia", "hypokalemia", "potassium", "K", "鉀", "高血鉀", "低血鉀", "帳篷狀 T", "U 波"] },
   { "kind": "模擬器", "title": "血鈣心電圖變化", "sub": "Ca²⁺ · ECG 模擬器", "url": "ecg/#Ca",
     "aliases": ["hypercalcemia", "hypocalcemia", "calcium", "Ca", "鈣", "QT", "short QT", "long QT"] },
+  { "kind": "模擬器", "title": "血鎂心電圖變化", "sub": "Mg²⁺ · ECG 模擬器", "url": "ecg/#Mg",
+    "aliases": ["hypermagnesemia", "hypomagnesemia", "magnesium", "Mg", "鎂", "Torsades", "TdP", "long QT", "AV block", "PR prolongation"] },
 
   { "kind": "流程", "title": "ABG 酸鹼判讀器", "sub": "輸入 pH/PaCO₂/HCO₃", "url": "abg/",
     "aliases": ["ABG", "arterial blood gas", "酸鹼", "pH", "PaCO2", "PaCO₂", "HCO3", "HCO₃",

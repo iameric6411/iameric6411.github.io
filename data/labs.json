@@ -265,7 +265,11 @@
       "難治性低 K、低 Ca 一律先驗 Mg、先補 Mg",
       "PPI 長期使用是常見漏掉的低鎂原因"
     ],
-    "quick": "IV MgSO₄(嚴重 / TdP);難治性低 K / 低 Ca 一律先驗 Mg"
+    "quick": "IV MgSO₄(嚴重 / TdP);難治性低 K / 低 Ca 一律先驗 Mg",
+    "link": {
+      "href": "../ecg/#Mg",
+      "label": "→ 看血鎂心電圖變化"
+    }
   },
   {
     "id": "phos",
