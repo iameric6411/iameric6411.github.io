@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>動脈血氣 · 酸鹼判讀器</title>
-<meta name="description" content="動脈血氣酸鹼判讀器:輸入 pH/PaCO₂/HCO₃ 自動判讀原發 / 代償 / AG / delta-delta,支援急性 / 慢性呼吸代償公式。">
+<title>ABG 動脈氣體分析計算機</title>
+<meta name="description" content="ABG 動脈氣體分析計算機:輸入 pH/PaCO₂/HCO₃ 自動判讀原發 / 代償 / AG / delta-delta,內含 PH × PaCO₂ 3×3 矩陣視覺化流程圖,支援急性 / 慢性呼吸代償公式。">
 
 <style>
   :root{
@@ -49,6 +49,40 @@
   .ph{font-family:var(--mono);font-size:12.5px;color:var(--ghost);padding:8px 2px}
   .ref{font-family:var(--mono);font-size:11px;color:var(--ghost);margin-top:12px;line-height:1.6}
 
+  /* === 視覺化流程圖 === */
+  .flbl{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-weight:700;letter-spacing:.5px;
+    margin:14px 0 8px;padding-left:2px}
+  .flbl:first-child{margin-top:2px}
+  .flbl .sub{display:inline;color:var(--ghost);font-weight:400;margin-left:8px}
+  .grid3{display:grid;grid-template-columns:54px repeat(3,1fr);gap:5px}
+  .grid3 .gh{font-family:var(--mono);font-size:10.5px;color:var(--ghost);
+    display:flex;align-items:center;justify-content:center;padding:4px 2px;text-align:center;line-height:1.3}
+  .grid3 .gc{background:#0a0f14;border:1px solid #18242d;border-radius:8px;padding:11px 6px;
+    font-family:var(--mono);font-size:10.5px;color:#6a7670;text-align:center;line-height:1.35;
+    transition:.18s;min-height:56px;display:flex;align-items:center;justify-content:center}
+  .grid3 .gc.lit{color:var(--ink);font-weight:700;box-shadow:0 0 0 1px currentColor inset}
+  .grid3 .gc.lit.acid{background:#1a0e0a;border-color:var(--acid);color:var(--acid)}
+  .grid3 .gc.lit.alk{background:#0a131c;border-color:var(--alk);color:var(--alk)}
+  .grid3 .gc.lit.safe{background:#0c1a14;border-color:var(--safe);color:var(--safe)}
+  .grid3 .gc.lit.warn{background:#1a1408;border-color:var(--warn);color:var(--warn)}
+
+  .cform{display:grid;gap:5px}
+  .cf{display:flex;gap:10px;background:#0a0f14;border:1px solid #18242d;border-left:3px solid var(--ghost);
+    border-radius:7px;padding:8px 11px;font-family:var(--mono);font-size:11.5px;color:#6a7670;line-height:1.5;transition:.18s}
+  .cf .cfn{flex:0 0 120px;color:var(--muted);font-weight:700;font-size:11px}
+  .cf.lit{border-left-color:var(--safe);background:#0c1a14;color:var(--ink)}
+  .cf.lit .cfn{color:var(--safe)}
+
+  .ddv{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .ddb{background:#0a0f14;border:1px solid #18242d;border-radius:7px;padding:10px 8px;
+    font-family:var(--mono);font-size:10.5px;color:#6a7670;text-align:center;line-height:1.4;transition:.18s}
+  .ddb b{display:block;font-size:13px;margin-bottom:3px;color:var(--muted)}
+  .ddb.lit{background:#0c1a14;border-color:var(--safe);color:var(--ink)}
+  .ddb.lit b{color:var(--safe)}
+  .ddx{margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted);
+    background:#0a0f14;border:1px solid #18242d;border-radius:7px;padding:9px 12px;line-height:1.6}
+  .ddx b{color:var(--ink);font-weight:700}
+
   footer{margin-top:24px;font-size:11.5px;color:#465751;line-height:1.7}
   footer a{color:#5a6d65}
 
@@ -62,12 +96,12 @@
 <link rel="icon" href="/icon-192.png" type="image/png">
 </head>
 <body>
-<nav class="crumb"><a href="../">← 首頁</a> · <span class="cur">ABG 酸鹼判讀</span></nav>
+<nav class="crumb"><a href="../">← 首頁</a> · <span class="cur">ABG 動脈氣體分析計算機</span></nav>
 
 <div class="wrap">
   <header>
-    <h1>動脈血氣 · 酸鹼判讀器</h1>
-    <p class="sub">輸入數值,逐步判讀:① pH → ② 原發障礙 → ③ 代償是否恰當 → ④ 陰離子間隙 → ⑤ delta-delta。屬 <a href="../flow/">判讀流程</a>家族。</p>
+    <h1>ABG 動脈氣體分析計算機</h1>
+    <p class="sub">輸入數值即時視覺化判讀:PH × PaCO₂ 3×3 矩陣定位原發障礙 → 代償公式 → AG / Δ-Δ。流程圖排版參考 <a href="http://charliekuo.com/?p=2962" target="_blank" rel="noopener">Charlie Kuo · ABG 判讀</a>;屬 <a href="../flow/">判讀流程</a>家族。</p>
   </header>
 
   <div class="box">
@@ -92,15 +126,60 @@
   </div>
 
   <div class="box">
+    <h2>視覺化流程圖</h2>
+
+    <p class="flbl">Step 1 · pH × PaCO₂ 3×3 矩陣 <span class="sub">看角落 → 純粹型;看中央 → 混合型或代償</span></p>
+    <div class="grid3" id="g_primary">
+      <div></div>
+      <div class="gh">PaCO₂ ↑<br><span style="color:#465751">&gt;45</span></div>
+      <div class="gh">PaCO₂ ↔<br><span style="color:#465751">35–45</span></div>
+      <div class="gh">PaCO₂ ↓<br><span style="color:#465751">&lt;35</span></div>
+
+      <div class="gh">pH ↑<br><span style="color:#465751">&gt;7.45</span></div>
+      <div class="gc" data-k="up_up">M.alk</div>
+      <div class="gc" data-k="up_mid">R.alk + M.alk</div>
+      <div class="gc" data-k="up_down">R.alk</div>
+
+      <div class="gh">pH ↔<br><span style="color:#465751">7.35–7.45</span></div>
+      <div class="gc" data-k="mid_up">慢性 R.aci<br>(R.aci + M.alk)</div>
+      <div class="gc" data-k="mid_mid">Normal</div>
+      <div class="gc" data-k="mid_down">慢性 R.alk<br>(R.alk + M.aci)</div>
+
+      <div class="gh">pH ↓<br><span style="color:#465751">&lt;7.35</span></div>
+      <div class="gc" data-k="down_up">R.aci</div>
+      <div class="gc" data-k="down_mid">R.aci + M.aci</div>
+      <div class="gc" data-k="down_down">M.aci</div>
+    </div>
+
+    <p class="flbl">Step 2 · 代償公式 <span class="sub">高亮 = 當前原發障礙適用</span></p>
+    <div class="cform" id="g_comp">
+      <div class="cf" data-cf="macid"><span class="cfn">M.acidosis</span>預期 PaCO₂ = 1.5×HCO₃ + 8 ± 2 (Winter's) · 或 PaCO₂ ≈ pH 末兩位</div>
+      <div class="cf" data-cf="malk"><span class="cfn">M.alkalosis</span>預期 PaCO₂ = 40 + 0.7×(HCO₃ − 24)</div>
+      <div class="cf" data-cf="racid_a"><span class="cfn">R.acidosis 急性</span>預期 HCO₃ = 24 + 0.1×(PaCO₂ − 40)</div>
+      <div class="cf" data-cf="racid_c"><span class="cfn">R.acidosis 慢性</span>預期 HCO₃ = 24 + 0.35×(PaCO₂ − 40)</div>
+      <div class="cf" data-cf="ralk_a"><span class="cfn">R.alkalosis 急性</span>預期 HCO₃ = 24 − 0.2×(40 − PaCO₂)</div>
+      <div class="cf" data-cf="ralk_c"><span class="cfn">R.alkalosis 慢性</span>預期 HCO₃ = 24 − 0.4×(40 − PaCO₂)</div>
+    </div>
+
+    <p class="flbl">Step 3 · Δ-Δ ratio <span class="sub">代謝酸(AG ↑)時鎖定 · Δ-Δ = ΔAG / ΔHCO₃</span></p>
+    <div class="ddv" id="g_dd">
+      <div class="ddb" data-dd="lo"><b>&lt; 1</b>HAGMA + NAGMA<br>(合併正常 AG 代酸)</div>
+      <div class="ddb" data-dd="mid"><b>1 – 2</b>單純 HAGMA</div>
+      <div class="ddb" data-dd="hi"><b>&gt; 2</b>HAGMA + M.alkalosis<br>(合併鹼)</div>
+    </div>
+    <div class="ddx" id="g_ddx" style="display:none"></div>
+  </div>
+
+  <div class="box">
     <h2>判讀</h2>
     <div class="steps" id="out"><p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p></div>
     <p class="ref">代償公式:代謝性酸中毒 Winter's 預期 PaCO₂ = 1.5×HCO₃ + 8 (±2);代謝性鹼中毒 ≈ 40 + 0.7×(HCO₃−24);呼吸性以急性/慢性預期 HCO₃ 對照。AG = Na − (Cl + HCO₃),現代 ion-selective electrode 法正常約 6–12(舊版 8–12);白蛋白每低 1 g/dL 校正 AG +2.5。</p>
   </div>
 
   <footer>
-    教學示意用,公式為常見近似值(±範圍各家略異),臨床判讀須結合病史、容積與電解質。<br>
+    教學示意用,公式為常見近似值(±範圍各家略異),臨床判讀須結合病史、容積與電解質。3×3 矩陣與流程排版參考 <a href="http://charliekuo.com/?p=2962" target="_blank" rel="noopener">Charlie Kuo · ABG 動脈氣體分析</a>。<br>
     <a href="../">← 返回總覽</a> · <a href="../labs/">實驗室檢查</a> · <a href="../flow/">心電圖判讀</a>
-    <span style="color:#3a4842;font-family:ui-monospace,monospace;font-size:11px;">本頁最後 review:2026-06-13</span>
+    <span style="color:#3a4842;font-family:ui-monospace,monospace;font-size:11px;">本頁最後 review:2026-06-15</span>
   </footer>
 </div>
 
@@ -116,10 +195,73 @@ const PRESETS={
   '焦慮(呼吸性鹼中毒)':{pH:7.50,pco2:28,hco3:22,na:140,cl:104,alb:4.0},
 };
 
+function clearFlow(){
+  document.querySelectorAll('.gc').forEach(el=>{el.classList.remove('lit','acid','alk','safe','warn');});
+  document.querySelectorAll('.cf').forEach(el=>el.classList.remove('lit'));
+  document.querySelectorAll('.ddb').forEach(el=>el.classList.remove('lit'));
+  document.getElementById('g_ddx').style.display='none';
+}
+function highlightFlow(pH,pco2,hco3,na,cl,alb,primary){
+  clearFlow();
+  // === Step 1: 3x3 grid 高亮 ===
+  const phd = pH<7.35?'down':(pH>7.45?'up':'mid');
+  const pcd = pco2<35?'down':(pco2>45?'up':'mid');
+  const key = phd+'_'+pcd;
+  // 色彩:純粹型用 acid/alk,中央正常用 safe,單軸偏離用 warn(混合 / 慢性代償)
+  const cellColor={
+    'up_up':'alk','up_down':'alk','up_mid':'alk',
+    'down_up':'acid','down_down':'acid','down_mid':'acid',
+    'mid_up':'warn','mid_down':'warn',
+    'mid_mid':'safe',
+  }[key]||'safe';
+  const cell=document.querySelector('.gc[data-k="'+key+'"]');
+  if(cell)cell.classList.add('lit',cellColor);
+
+  // === Step 2: 代償公式高亮 ===
+  const dur=document.getElementById('dur').value;
+  const litCfs=[];
+  if(primary==='代謝性酸中毒')litCfs.push('macid');
+  else if(primary==='代謝性鹼中毒')litCfs.push('malk');
+  else if(primary==='呼吸性酸中毒'){
+    if(dur==='acute')litCfs.push('racid_a');
+    else if(dur==='chronic')litCfs.push('racid_c');
+    else{litCfs.push('racid_a','racid_c');}
+  }
+  else if(primary==='呼吸性鹼中毒'){
+    if(dur==='acute')litCfs.push('ralk_a');
+    else if(dur==='chronic')litCfs.push('ralk_c');
+    else{litCfs.push('ralk_a','ralk_c');}
+  }
+  for(const k of litCfs){const el=document.querySelector('.cf[data-cf="'+k+'"]');if(el)el.classList.add('lit');}
+
+  // === Step 3: Δ-Δ ratio 高亮(代謝酸 + 有 Na/Cl)===
+  if(primary==='代謝性酸中毒'&&na!=null&&cl!=null){
+    let ag=na-(cl+hco3);
+    let cag=ag;if(alb!=null)cag=ag+2.5*(4-alb);
+    if(cag>12){
+      const dHCO3=24-hco3;
+      const dAG=cag-12;
+      if(Math.abs(dHCO3)<0.5){
+        document.getElementById('g_ddx').style.display='block';
+        document.getElementById('g_ddx').innerHTML='HCO₃ 接近 24,Δ-Δ ratio 分母過小不穩定,請結合臨床。';
+      }else{
+        const dd=dAG/dHCO3;
+        let band='mid';
+        if(dd<1)band='lo';else if(dd>2)band='hi';
+        const el=document.querySelector('.ddb[data-dd="'+band+'"]');
+        if(el)el.classList.add('lit');
+        const x=document.getElementById('g_ddx');
+        x.style.display='block';
+        x.innerHTML='Δ-Δ ratio = <b>ΔAG / ΔHCO₃ = '+dAG.toFixed(0)+' / '+dHCO3.toFixed(0)+' = '+dd.toFixed(2)+'</b> '+
+          (band==='lo'?'→ 合併 NAGMA':band==='hi'?'→ 合併 M.alkalosis':'→ 單純 HAGMA');
+      }
+    }
+  }
+}
 function interp(){
   const pH=num('pH'),pco2=num('pco2'),hco3=num('hco3'),na=num('na'),cl=num('cl'),alb=num('alb');
   const out=document.getElementById('out');
-  if(pH==null||pco2==null||hco3==null){out.innerHTML='<p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p>';return;}
+  if(pH==null||pco2==null||hco3==null){out.innerHTML='<p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p>';clearFlow();return;}
   const S=[];const push=(tag,t,tone)=>S.push({tag,t,tone:tone||'info'});
   const rng=x=>`${(x-2).toFixed(0)}–${(x+2).toFixed(0)}`;
 
@@ -225,6 +367,12 @@ function interp(){
   }
 
   out.innerHTML=S.map(s=>`<div class="step ${s.tone}"><span class="tag">${s.tag}</span><span>${s.t}</span></div>`).join('');
+  // 標準化 primary 名稱(去除括號變體)再傳入流程圖
+  const pNorm=primary.includes('代謝性酸中毒')?'代謝性酸中毒'
+            :primary.includes('代謝性鹼中毒')?'代謝性鹼中毒'
+            :primary.includes('呼吸性酸中毒')?'呼吸性酸中毒'
+            :primary.includes('呼吸性鹼中毒')?'呼吸性鹼中毒':primary;
+  highlightFlow(pH,pco2,hco3,na,cl,alb,pNorm);
 }
 
 // presets + listeners
