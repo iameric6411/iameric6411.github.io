@@ -91,6 +91,45 @@
   .hhwarn.show{display:block}
   .hhwarn b{color:#f5c042;font-weight:700}
 
+  /* 鑑別診斷折疊區 */
+  .dx{margin-top:8px;background:#0a0f14;border:1px solid #18242d;border-radius:8px;
+    font-family:var(--mono);font-size:11.5px;color:#9fa5a1}
+  .dx summary{cursor:pointer;padding:9px 13px;color:#5fd8ac;font-weight:700;outline:none;
+    list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:.3px}
+  .dx summary::-webkit-details-marker{display:none}
+  .dx summary::after{content:"▸";color:var(--ghost);font-family:var(--mono);transition:.2s}
+  .dx[open] summary::after{transform:rotate(90deg)}
+  .dx summary:hover{color:#7eebbf}
+  .dx ul{margin:0;padding:0 18px 12px 24px;list-style:none}
+  .dx li{position:relative;padding:5px 0 5px 14px;line-height:1.6;border-top:1px solid #131d22;color:#bfd0c7}
+  .dx li:first-child{border-top:none}
+  .dx li:before{content:"•";position:absolute;left:0;color:var(--safe);font-weight:700}
+
+  /* AG (i) tooltip */
+  .info-i{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+    border-radius:50%;background:#1a2530;color:#5fd8ac;font-family:var(--mono);font-size:10px;font-weight:700;
+    cursor:help;margin-left:5px;position:relative}
+  .info-i:hover{background:#2bd07a;color:#06120c}
+  .info-i .tip{position:absolute;bottom:130%;left:50%;transform:translateX(-50%);
+    width:240px;padding:9px 11px;background:#0c1217;border:1px solid #2bd07a;border-radius:7px;
+    color:#cdded6;font-size:11px;font-weight:400;line-height:1.55;text-align:left;letter-spacing:0;
+    opacity:0;pointer-events:none;transition:.18s;z-index:30}
+  .info-i:hover .tip{opacity:1}
+  .info-i .tip:before{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:5px solid transparent;border-top-color:#2bd07a}
+
+  /* 複製病歷按鈕 + toast */
+  .copybar{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .copybtn{font-family:var(--mono);font-size:12px;padding:9px 16px;border-radius:8px;cursor:pointer;
+    background:#13211b;border:1px solid #27513c;color:var(--safe);font-weight:700;letter-spacing:.3px;transition:.15s;min-height:44px}
+  .copybtn:hover{background:#1a2f24;border-color:#3a7857;color:#7eebbf}
+  .copybtn:active{transform:translateY(1px)}
+  .copybtn .ico{margin-right:6px}
+  .toast{display:none;font-family:var(--mono);font-size:11.5px;color:var(--safe);
+    background:#0c1a14;border:1px solid #27513c;border-radius:6px;padding:8px 12px}
+  .toast.show{display:inline-block;animation:fadein .25s}
+  @keyframes fadein{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+
   /* 三重酸鹼障礙標籤 */
   .triple{display:none;margin:12px 0 0;padding:11px 14px;background:#1a0e0a;border:1px solid #6a2a18;
     border-left:4px solid var(--acid);border-radius:9px;font-family:var(--mono);font-size:13px;color:#ff9d72;line-height:1.55;font-weight:700;letter-spacing:.3px}
@@ -192,6 +231,11 @@
     <h2>判讀</h2>
     <div class="triple" id="triple"></div>
     <div class="steps" id="out"><p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p></div>
+    <div id="dxarea"></div>
+    <div class="copybar" id="copybar" style="display:none">
+      <button class="copybtn" id="copybtn" type="button"><span class="ico">📋</span>複製病歷文字 (for Note)</button>
+      <span class="toast" id="toast">已複製到剪貼簿</span>
+    </div>
     <p class="ref">代償公式:代謝性酸中毒 Winter's 預期 PaCO₂ = 1.5×HCO₃ + 8 (±2);代謝性鹼中毒 ≈ 40 + 0.7×(HCO₃−24);呼吸性以急性/慢性預期 HCO₃ 對照。AG = Na − (Cl + HCO₃),現代 ion-selective electrode 法正常約 6–12(舊版 8–12);白蛋白每低 1 g/dL 校正 AG +2.5。</p>
   </div>
 
@@ -205,6 +249,44 @@
 <script>
 const num=id=>{const v=parseFloat(document.getElementById(id).value);return isNaN(v)?null:v;};
 const fields=['pH','pco2','hco3','na','cl','alb'];
+
+// === 鑑別診斷小折疊區 (clerk/intern ward round 常被問的) ===
+const DDX={
+  hagma:{title:'HAGMA 鑑別 — MUDPILES',items:[
+    'M · Methanol (毒物 / 甲醇 — fomepizole + 鹼化 + 透析)',
+    'U · Uremia (BUN ↑ / Cr ↑ → 透析適應症之一)',
+    'D · DKA / AKA / SKA (酮酸 — fluid + insulin / 戒酒補 thiamine)',
+    'P · Paraldehyde / Propylene glycol (lorazepam drip / 抗驚厥液體載體)',
+    'I · Iron / INH 中毒',
+    'L · Lactic acidosis (lactate > 4 — sepsis / shock / metformin / linezolid / liver failure)',
+    'E · Ethylene glycol (毒物 / 防凍液 — fomepizole + 透析)',
+    'S · Salicylates (Aspirin 中毒 — 鹼化尿液 / 透析)',
+  ]},
+  nagma:{title:'NAGMA 鑑別 — HARDUPS / USEDCARP',items:[
+    'H · Hyperalimentation (TPN amino acids)',
+    'A · Acetazolamide / 其他 carbonic anhydrase 抑制劑',
+    'R · Renal tubular acidosis (Type 1 distal / Type 2 proximal / Type 4 hypoaldo)',
+    'D · Diarrhea (腸道 HCO₃ 流失,最常見)',
+    'U · Ureteroenterostomy (尿轉流至腸)',
+    'P · Pancreatic fistula / Post-resuscitation',
+    'S · 大量 Saline 輸液 → dilutional hyperchloremic acidosis',
+    '鑑別:Urine AG (Na + K − Cl) — 負值 → 腎臟 NH₄⁺ 排出正常(腸道源);正值 → 腎臟問題 (RTA)',
+  ]},
+  malk:{title:'M.alkalosis 鑑別 — 用 urine Cl 分流',items:[
+    'Saline-responsive (尿 Cl < 20):嘔吐 / NG drain / 利尿劑停藥後 / post-hypercapnia',
+    'Saline-resistant (尿 Cl > 20):原發 hyperaldosteronism / Cushing / Bartter / Gitelman / 嚴重低 K / 嚴重低 Mg / 持續使用利尿劑',
+    '處置:Saline-responsive → 補 NS + KCl;Saline-resistant → 治療原發病 (mineralocorticoid 拮抗 / 補 K Mg)',
+  ]},
+  racid:{title:'R.acidosis 鑑別',items:[
+    '急性:opioid / 鎮靜劑 / NMJ 病 (MG / GBS) / 氣胸 / pulmonary edema / 嚴重 asthma / 早期 PE',
+    '慢性:COPD / OHS (obesity hypoventilation) / kyphoscoliosis / 神經肌肉病 (ALS / muscular dystrophy)',
+    '處置原則:急性 → 找原因 + 必要時 NIV / 插管;慢性 → 治療 underlying + 避免過度氧療(CO₂ retainer)',
+  ]},
+  ralk:{title:'R.alkalosis 鑑別',items:[
+    '焦慮 / pain / 早期 sepsis / PE / 早期 salicylate 中毒 / pregnancy / 缺氧(高海拔 / asthma) / 中樞性 (CVA / SAH / 顱內病灶) / 肝硬化',
+    '注意:早期 sepsis 與 PE 是「致命卻常被忽略」的原因 — 不要只當 anxiety 處理',
+  ]},
+};
 
 const PRESETS={
   '正常':{pH:7.40,pco2:40,hco3:24,na:140,cl:104,alb:4.0},
@@ -303,7 +385,13 @@ function highlightFlow(pH,pco2,hco3,na,cl,alb,primary){
 function interp(){
   const pH=num('pH'),pco2=num('pco2'),hco3=num('hco3'),na=num('na'),cl=num('cl'),alb=num('alb');
   const out=document.getElementById('out');
-  if(pH==null||pco2==null||hco3==null){out.innerHTML='<p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p>';clearFlow();return;}
+  if(pH==null||pco2==null||hco3==null){
+    out.innerHTML='<p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p>';
+    document.getElementById('dxarea').innerHTML='';
+    document.getElementById('copybar').style.display='none';
+    LAST_INTERP=null;
+    clearFlow();return;
+  }
   // Henderson-Hasselbalch 一致性檢查(非阻擋)
   checkHH(pH,pco2,hco3);
   const S=[];const push=(tag,t,tone)=>S.push({tag,t,tone:tone||'info'});
@@ -395,11 +483,13 @@ function interp(){
   const labsLink=`<a href="../labs/#calc-ag" style="color:#5fd8ac;text-decoration:none">→ labs AG 計算機</a>`;
   const naLink=`<a href="../labs/#na" style="color:#5fd8ac;text-decoration:none">Na 卡片</a>`;
   const clLink=`<a href="../labs/#cl" style="color:#5fd8ac;text-decoration:none">Cl 卡片</a>`;
+  const agInfo=`<span class="info-i">i<span class="tip">AG 切點隨測定方法而異:現代 ion-selective electrode (ISE) 法正常 6–12;舊版火焰光度計 8–12。本院實際區間建議對照 LIS;AG &gt; 12 提示 HAGMA。</span></span>`;
+  let highAG=false;
   if(na!=null&&cl!=null){
     let ag=na-(cl+hco3),agtxt=`AG = ${na} − (${cl}+${hco3}) = ${ag.toFixed(0)}`,cag=ag;
     if(alb!=null){cag=ag+2.5*(4-alb);agtxt+=`;白蛋白校正 ≈ ${cag.toFixed(0)}`;}
-    const high=cag>12;
-    push('④ 陰離子間隙',agtxt+(high?` → 升高 (high AG) · ${labsLink}`:` → 正常範圍 · ${labsLink}`),high?'acid':'normal');
+    const high=cag>12;highAG=high;
+    push('④ 陰離子間隙',agtxt+(high?` → 升高 (high AG)${agInfo} · ${labsLink}`:` → 正常範圍${agInfo} · ${labsLink}`),high?'acid':'normal');
     if(high){
       const dd=(cag-12)/(24-hco3);let m;
       if(!isFinite(dd)||Math.abs(24-hco3)<0.5)m='HCO₃ 接近 24,Δ-Δ 不穩定,請結合臨床。';
@@ -428,12 +518,58 @@ function interp(){
   }
 
   out.innerHTML=S.map(s=>`<div class="step ${s.tone}"><span class="tag">${s.tag}</span><span>${s.t}</span></div>`).join('');
+
+  // === 鑑別診斷折疊區(依原發 / AG 狀態填) ===
+  const dxKeys=[];
+  if(primary==='代謝性酸中毒'||primary.includes('代謝 + 呼吸')){
+    if(highAG)dxKeys.push('hagma');
+    if(na!=null&&cl!=null&&!highAG)dxKeys.push('nagma');
+    if(na==null||cl==null){dxKeys.push('hagma');dxKeys.push('nagma');}
+  }
+  if(primary==='代謝性鹼中毒'||primary.includes('R.alk + M.alk')||primary.includes('代謝鹼'))dxKeys.push('malk');
+  if(primary==='呼吸性酸中毒'||primary.includes('R.aci'))dxKeys.push('racid');
+  if(primary==='呼吸性鹼中毒'||primary.includes('R.alk + M.aci'))dxKeys.push('ralk');
+  const seen=new Set(),uniq=dxKeys.filter(k=>!seen.has(k)&&seen.add(k));
+  const dxHtml=uniq.map(k=>{
+    const d=DDX[k];if(!d)return '';
+    return '<details class="dx"><summary>'+d.title+'</summary><ul>'+
+      d.items.map(x=>'<li>'+x+'</li>').join('')+'</ul></details>';
+  }).join('');
+  document.getElementById('dxarea').innerHTML=dxHtml;
+
+  // === 儲存最後一次判讀結果(供複製病歷使用)===
+  LAST_INTERP={pH,pco2,hco3,na,cl,alb,primary,
+    steps:S.map(s=>({tag:s.tag,t:s.t})),
+    disorders:[...disorders],dur:document.getElementById('dur').value};
+  document.getElementById('copybar').style.display='flex';
+
   // 標準化 primary 名稱(去除括號變體)再傳入流程圖
   const pNorm=primary.includes('代謝性酸中毒')?'代謝性酸中毒'
             :primary.includes('代謝性鹼中毒')?'代謝性鹼中毒'
             :primary.includes('呼吸性酸中毒')?'呼吸性酸中毒'
             :primary.includes('呼吸性鹼中毒')?'呼吸性鹼中毒':primary;
   highlightFlow(pH,pco2,hco3,na,cl,alb,pNorm);
+}
+let LAST_INTERP=null;
+function buildNote(){
+  if(!LAST_INTERP)return '';
+  const L=LAST_INTERP;
+  const date=new Date().toISOString().slice(0,10);
+  const lines=['ABG Interpretation ('+date+')'];
+  let vals='Values: pH '+L.pH+', PaCO₂ '+L.pco2+', HCO₃ '+L.hco3;
+  if(L.na!=null)vals+=', Na '+L.na;
+  if(L.cl!=null)vals+=', Cl '+L.cl;
+  if(L.alb!=null)vals+=', Alb '+L.alb;
+  lines.push('  '+vals);
+  for(const s of L.steps){
+    const clean=s.t.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+    lines.push('  '+s.tag+':'+clean);
+  }
+  if(L.disorders.length>=3){
+    lines.push('  ⚠ Suspect triple acid-base disorder: '+L.disorders.join(' + '));
+  }
+  lines.push('  Impression: '+(L.primary||'see steps')+(L.dur!=='auto'?' ('+L.dur+')':''));
+  return lines.join('\n');
 }
 
 // presets + listeners
@@ -461,6 +597,24 @@ function validateRanges(){
 }
 fields.forEach(f=>document.getElementById(f).addEventListener('input',()=>{validateRanges();interp();}));
 document.getElementById('dur').addEventListener('change',interp);
+
+// 複製病歷文字按鈕
+document.getElementById('copybtn').addEventListener('click',()=>{
+  const text=buildNote();
+  if(!text)return;
+  const showToast=()=>{const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(showToast).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();try{document.execCommand('copy');showToast();}catch(_){}
+      document.body.removeChild(ta);
+    });
+  }else{
+    const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();try{document.execCommand('copy');showToast();}catch(_){}
+    document.body.removeChild(ta);
+  }
+});
 
 // Enter / ↓:跳到下一個輸入欄;Shift+Enter / ↑:跳回上一個
 const navFields=[...fields];
