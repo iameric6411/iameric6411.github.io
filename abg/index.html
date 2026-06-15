@@ -73,7 +73,8 @@
   .cf.lit{border-left-color:var(--safe);background:#0c1a14;color:var(--ink)}
   .cf.lit .cfn{color:var(--safe)}
 
-  .ddv{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .ddv{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+  @media(max-width:560px){.ddv{grid-template-columns:repeat(2,1fr)}}
   .ddb{background:#0a0f14;border:1px solid #18242d;border-radius:7px;padding:10px 8px;
     font-family:var(--mono);font-size:10.5px;color:#6a7670;text-align:center;line-height:1.4;transition:.18s}
   .ddb b{display:block;font-size:13px;margin-bottom:3px;color:var(--muted)}
@@ -82,6 +83,20 @@
   .ddx{margin-top:10px;font-family:var(--mono);font-size:11.5px;color:var(--muted);
     background:#0a0f14;border:1px solid #18242d;border-radius:7px;padding:9px 12px;line-height:1.6}
   .ddx b{color:var(--ink);font-weight:700}
+  .ddcav{margin:10px 2px 0;font-family:var(--mono);font-size:10.5px;color:#7a6c4a;line-height:1.5}
+
+  /* Henderson-Hasselbalch 一致性警示(非阻擋) */
+  .hhwarn{display:none;margin-top:12px;padding:10px 13px;background:#1a1408;border:1px solid #5a4818;
+    border-left:3px solid var(--warn);border-radius:8px;font-family:var(--mono);font-size:11.5px;color:#e8c46a;line-height:1.55}
+  .hhwarn.show{display:block}
+  .hhwarn b{color:#f5c042;font-weight:700}
+
+  /* 三重酸鹼障礙標籤 */
+  .triple{display:none;margin:12px 0 0;padding:11px 14px;background:#1a0e0a;border:1px solid #6a2a18;
+    border-left:4px solid var(--acid);border-radius:9px;font-family:var(--mono);font-size:13px;color:#ff9d72;line-height:1.55;font-weight:700;letter-spacing:.3px}
+  .triple.show{display:block}
+  .triple b{color:#ff7a3c}
+  .triple .sub{display:block;margin-top:5px;font-weight:400;font-size:11px;color:#a8775c}
 
   footer{margin-top:24px;font-size:11.5px;color:#465751;line-height:1.7}
   footer a{color:#5a6d65}
@@ -109,20 +124,21 @@
     <div class="frow">
       <div class="field"><label>pH <span class="req">*</span></label><input id="pH" type="number" step="0.01" inputmode="decimal" placeholder="7.40"><span class="u">7.35–7.45</span></div>
       <div class="field"><label>PaCO₂ <span class="req">*</span></label><input id="pco2" type="number" step="0.1" inputmode="decimal" placeholder="40"><span class="u">mmHg · 35–45</span></div>
-      <div class="field"><label>HCO₃⁻ <span class="req">*</span></label><input id="hco3" type="number" step="0.1" inputmode="decimal" placeholder="24"><span class="u">mEq/L · 22–26</span></div>
+      <div class="field"><label>HCO₃⁻ <span class="req">*</span></label><input id="hco3" type="number" step="0.1" inputmode="decimal" placeholder="24"><span class="u">mEq/L · 22–26 · ABG 計算值,可能與 serum TCO₂ 差 ±5</span></div>
       <div class="field"><label>Na</label><input id="na" type="number" inputmode="decimal" placeholder="選填"><span class="u">mEq/L</span></div>
       <div class="field"><label>Cl</label><input id="cl" type="number" inputmode="decimal" placeholder="選填"><span class="u">mEq/L</span></div>
       <div class="field"><label>Albumin</label><input id="alb" type="number" step="0.1" inputmode="decimal" placeholder="選填"><span class="u">g/dL</span></div>
       <div class="field"><label>呼吸障礙時程</label>
         <select id="dur" style="background:#0a0f14;border:1px solid #18242d;border-radius:8px;padding:10px 11px;color:var(--ink);font-family:var(--mono);font-size:13px;outline:none">
-          <option value="auto">自動(顯示兩者)</option>
-          <option value="acute">急性</option>
-          <option value="chronic">慢性</option>
+          <option value="acute" selected>急性(預設)</option>
+          <option value="chronic">慢性 / acute-on-chronic</option>
+          <option value="auto">不確定 · 顯示兩者</option>
         </select>
         <span class="u">影響呼吸性代償公式</span>
       </div>
     </div>
     <div class="presets" id="presets"></div>
+    <div class="hhwarn" id="hhwarn"></div>
   </div>
 
   <div class="box">
@@ -163,15 +179,18 @@
 
     <p class="flbl">Step 3 · Δ-Δ ratio <span class="sub">代謝酸(AG ↑)時鎖定 · Δ-Δ = ΔAG / ΔHCO₃</span></p>
     <div class="ddv" id="g_dd">
-      <div class="ddb" data-dd="lo"><b>&lt; 1</b>HAGMA + NAGMA<br>(合併正常 AG 代酸)</div>
-      <div class="ddb" data-dd="mid"><b>1 – 2</b>單純 HAGMA</div>
+      <div class="ddb" data-dd="lo"><b>&lt; 0.8</b>HAGMA + NAGMA<br>(合併正常 AG 代酸)</div>
+      <div class="ddb" data-dd="oneone"><b>0.8 – 1.2</b>1:1 比例<br>(典型 DKA / ketoacidosis)</div>
+      <div class="ddb" data-dd="mid"><b>1.2 – 2</b>典型 HAGMA<br>(lactate ≈ 1.6)</div>
       <div class="ddb" data-dd="hi"><b>&gt; 2</b>HAGMA + M.alkalosis<br>(合併鹼)</div>
     </div>
     <div class="ddx" id="g_ddx" style="display:none"></div>
+    <p class="ddcav">⚠ Δ-Δ 是「輔助」而非「絕對」 — 請結合 lactate、ketone、Cl 變化與臨床判讀;DKA 治療中比值會持續變化。</p>
   </div>
 
   <div class="box">
     <h2>判讀</h2>
+    <div class="triple" id="triple"></div>
     <div class="steps" id="out"><p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p></div>
     <p class="ref">代償公式:代謝性酸中毒 Winter's 預期 PaCO₂ = 1.5×HCO₃ + 8 (±2);代謝性鹼中毒 ≈ 40 + 0.7×(HCO₃−24);呼吸性以急性/慢性預期 HCO₃ 對照。AG = Na − (Cl + HCO₃),現代 ion-selective electrode 法正常約 6–12(舊版 8–12);白蛋白每低 1 g/dL 校正 AG +2.5。</p>
   </div>
@@ -200,6 +219,27 @@ function clearFlow(){
   document.querySelectorAll('.cf').forEach(el=>el.classList.remove('lit'));
   document.querySelectorAll('.ddb').forEach(el=>el.classList.remove('lit'));
   document.getElementById('g_ddx').style.display='none';
+  document.getElementById('hhwarn').classList.remove('show');
+  document.getElementById('triple').classList.remove('show');
+}
+
+// Henderson-Hasselbalch 一致性檢查:[HCO₃] = 0.03 × PaCO₂ × 10^(pH − 6.1)
+// 若使用者輸入的 HCO₃ 與計算值差異 > 8% → 黃色非阻擋警示
+function checkHH(pH,pco2,hco3){
+  const expected=0.03*pco2*Math.pow(10,pH-6.1);
+  const diff=Math.abs(hco3-expected);
+  const pct=diff/expected*100;
+  const w=document.getElementById('hhwarn');
+  if(pct>8){
+    w.innerHTML=`<b>⚠ Henderson-Hasselbalch 一致性檢查未通過</b><br>`+
+      `由 pH ${pH}、PaCO₂ ${pco2} 算出預期 HCO₃ ≈ <b>${expected.toFixed(1)}</b> mEq/L,實際輸入 ${hco3.toFixed(1)} → 差 ${diff.toFixed(1)} mEq/L (${pct.toFixed(0)}%)。<br>`+
+      `<span style="color:#a89456">可能原因:不同時間點抽血、鍵入錯誤、或 ABG 機器計算值 vs serum TCO₂ 差異(嚴重酸鹼/低灌流可差 ±5)。建議用 serum HCO₃ 對照。</span>`;
+    w.classList.add('show');
+    return false;
+  }else{
+    w.classList.remove('show');
+    return true;
+  }
 }
 function highlightFlow(pH,pco2,hco3,na,cl,alb,primary){
   clearFlow();
@@ -235,7 +275,7 @@ function highlightFlow(pH,pco2,hco3,na,cl,alb,primary){
   for(const k of litCfs){const el=document.querySelector('.cf[data-cf="'+k+'"]');if(el)el.classList.add('lit');}
 
   // === Step 3: Δ-Δ ratio 高亮(代謝酸 + 有 Na/Cl)===
-  if(primary==='代謝性酸中毒'&&na!=null&&cl!=null){
+  if((primary==='代謝性酸中毒'||primary==='混合型酸中毒(代謝 + 呼吸)')&&na!=null&&cl!=null){
     let ag=na-(cl+hco3);
     let cag=ag;if(alb!=null)cag=ag+2.5*(4-alb);
     if(cag>12){
@@ -246,14 +286,16 @@ function highlightFlow(pH,pco2,hco3,na,cl,alb,primary){
         document.getElementById('g_ddx').innerHTML='HCO₃ 接近 24,Δ-Δ ratio 分母過小不穩定,請結合臨床。';
       }else{
         const dd=dAG/dHCO3;
-        let band='mid';
-        if(dd<1)band='lo';else if(dd>2)band='hi';
+        let band='mid',hint='';
+        if(dd<0.8){band='lo';hint='→ 合併 NAGMA(HCO₃ 降幅 > AG 升幅,額外有正常 AG 代酸成分)';}
+        else if(dd<=1.2){band='oneone';hint='→ 1:1 比例,典型 DKA / ketoacidosis(β-OHB 與 HCO₃ 互相置換)';}
+        else if(dd<=2){band='mid';hint='→ 典型 HAGMA(lactate ≈ 1.6 常見區間)';}
+        else{band='hi';hint='→ 合併 M.alkalosis(HCO₃ 被鹼性過程拉高,或慢性呼酸 baseline 偏高)';}
         const el=document.querySelector('.ddb[data-dd="'+band+'"]');
         if(el)el.classList.add('lit');
         const x=document.getElementById('g_ddx');
         x.style.display='block';
-        x.innerHTML='Δ-Δ ratio = <b>ΔAG / ΔHCO₃ = '+dAG.toFixed(0)+' / '+dHCO3.toFixed(0)+' = '+dd.toFixed(2)+'</b> '+
-          (band==='lo'?'→ 合併 NAGMA':band==='hi'?'→ 合併 M.alkalosis':'→ 單純 HAGMA');
+        x.innerHTML='Δ-Δ ratio = <b>ΔAG / ΔHCO₃ = '+dAG.toFixed(1)+' / '+dHCO3.toFixed(1)+' = '+dd.toFixed(2)+'</b> '+hint;
       }
     }
   }
@@ -262,8 +304,13 @@ function interp(){
   const pH=num('pH'),pco2=num('pco2'),hco3=num('hco3'),na=num('na'),cl=num('cl'),alb=num('alb');
   const out=document.getElementById('out');
   if(pH==null||pco2==null||hco3==null){out.innerHTML='<p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p>';clearFlow();return;}
+  // Henderson-Hasselbalch 一致性檢查(非阻擋)
+  checkHH(pH,pco2,hco3);
   const S=[];const push=(tag,t,tone)=>S.push({tag,t,tone:tone||'info'});
   const rng=x=>`${(x-2).toFixed(0)}–${(x+2).toFixed(0)}`;
+  // 追蹤偵測到的酸鹼障礙計數(供三重判定)
+  const disorders=new Set();   // 'M.aci', 'M.alk', 'R.aci', 'R.alk'
+  let compMixed=false,ddMixed=false;
 
   // ① pH
   let dir;
@@ -276,33 +323,34 @@ function interp(){
   // ② primary
   let primary,ptone='info';
   if(dir==='acid'){
-    if(metAcid&&respAcid){primary='混合型酸中毒(代謝 + 呼吸)';ptone='acid';}
-    else if(metAcid){primary='代謝性酸中毒';ptone='acid';}
-    else if(respAcid){primary='呼吸性酸中毒';ptone='acid';}
+    if(metAcid&&respAcid){primary='混合型酸中毒(代謝 + 呼吸)';ptone='acid';disorders.add('M.aci');disorders.add('R.aci');}
+    else if(metAcid){primary='代謝性酸中毒';ptone='acid';disorders.add('M.aci');}
+    else if(respAcid){primary='呼吸性酸中毒';ptone='acid';disorders.add('R.aci');}
     else{primary='酸血,但 HCO₃/PaCO₂ 未見明顯原發 → 複查或混合';ptone='warn';}
   }else if(dir==='alk'){
-    if(metAlk&&respAlk){primary='混合型鹼中毒(代謝 + 呼吸)';ptone='alk';}
-    else if(metAlk){primary='代謝性鹼中毒';ptone='alk';}
-    else if(respAlk){primary='呼吸性鹼中毒';ptone='alk';}
+    if(metAlk&&respAlk){primary='混合型鹼中毒(代謝 + 呼吸)';ptone='alk';disorders.add('M.alk');disorders.add('R.alk');}
+    else if(metAlk){primary='代謝性鹼中毒';ptone='alk';disorders.add('M.alk');}
+    else if(respAlk){primary='呼吸性鹼中毒';ptone='alk';disorders.add('R.alk');}
     else{primary='鹼血,但未見明顯原發 → 複查或混合';ptone='warn';}
   }else{
-    if((respAcid&&metAlk)||(respAlk&&metAcid)){primary='pH 正常但 PaCO₂ 與 HCO₃ 皆偏離 → 混合型或完全代償';ptone='warn';}
+    if(respAcid&&metAlk){primary='pH 正常但 PaCO₂ ↑ HCO₃ ↑ → 慢性 R.aci 完全代償 或 R.aci + M.alk';ptone='warn';disorders.add('R.aci');disorders.add('M.alk');}
+    else if(respAlk&&metAcid){primary='pH 正常但 PaCO₂ ↓ HCO₃ ↓ → 慢性 R.alk 完全代償 或 R.alk + M.aci';ptone='warn';disorders.add('R.alk');disorders.add('M.aci');}
     else if(!metAcid&&!metAlk&&!respAcid&&!respAlk){primary='正常血氣';ptone='normal';}
     else{primary='pH 正常、單一參數偏離 → 代償中或早期混合';ptone='warn';}
   }
   push('② 原發障礙',primary,ptone);
 
-  // ③ compensation
+  // ③ compensation(同時偵測合併另一個酸鹼障礙 → 進 disorders)
   if(primary==='代謝性酸中毒'){
     const exp=1.5*hco3+8;let m=`Winter's 預期 PaCO₂ = 1.5×${hco3}+8 = ${exp.toFixed(0)} (±2,即 ${rng(exp)});實測 ${pco2}`;
-    if(pco2>exp+2)m+=' → 偏高,合併呼吸性酸中毒。';
-    else if(pco2<exp-2)m+=' → 偏低,合併呼吸性鹼中毒。';
+    if(pco2>exp+2){m+=' → 偏高,合併呼吸性酸中毒。';disorders.add('R.aci');compMixed=true;}
+    else if(pco2<exp-2){m+=' → 偏低,合併呼吸性鹼中毒。';disorders.add('R.alk');compMixed=true;}
     else m+=' → 代償恰當(單純代謝性酸中毒)。';
     push('③ 呼吸代償',m);
   }else if(primary==='代謝性鹼中毒'){
     const exp=40+0.7*(hco3-24);let m=`預期 PaCO₂ ≈ 40 + 0.7×(${hco3}−24) = ${exp.toFixed(0)} (±2);實測 ${pco2}`;
-    if(pco2>exp+2)m+=' → 合併呼吸性酸中毒。';
-    else if(pco2<exp-2)m+=' → 合併呼吸性鹼中毒。';
+    if(pco2>exp+2){m+=' → 合併呼吸性酸中毒。';disorders.add('R.aci');compMixed=true;}
+    else if(pco2<exp-2){m+=' → 合併呼吸性鹼中毒。';disorders.add('R.alk');compMixed=true;}
     else m+=' → 代償恰當。';
     push('③ 呼吸代償',m);
   }else if(primary==='呼吸性酸中毒'){
@@ -310,14 +358,14 @@ function interp(){
     const dur=document.getElementById('dur').value;
     if(dur==='acute'){
       let m=`急性公式:預期 HCO₃ ≈ 24 + 0.1×(${pco2}−40) = ${ac.toFixed(0)} (±2);實測 ${hco3}`;
-      if(hco3>ac+2)m+=' → 高於急性預期 → 合併代謝鹼或已慢性化。';
-      else if(hco3<ac-2)m+=' → 低於急性預期 → 合併代謝性酸中毒。';
+      if(hco3>ac+2){m+=' → 高於急性預期 → 合併代謝鹼或已慢性化。';disorders.add('M.alk');compMixed=true;}
+      else if(hco3<ac-2){m+=' → 低於急性預期 → 合併代謝性酸中毒。';disorders.add('M.aci');compMixed=true;}
       else m+=' → 符合急性代償。';
       push('③ 代謝代償',m);
     }else if(dur==='chronic'){
       let m=`慢性公式:預期 HCO₃ ≈ 24 + 0.35×(${pco2}−40) = ${ch.toFixed(0)} (±2);實測 ${hco3}`;
-      if(hco3>ch+2)m+=' → 高於慢性預期 → 合併代謝鹼。';
-      else if(hco3<ch-2)m+=' → 低於慢性預期 → 合併代謝性酸中毒。';
+      if(hco3>ch+2){m+=' → 高於慢性預期 → 合併代謝鹼。';disorders.add('M.alk');compMixed=true;}
+      else if(hco3<ch-2){m+=' → 低於慢性預期 → 合併代謝性酸中毒。';disorders.add('M.aci');compMixed=true;}
       else m+=' → 符合慢性代償。';
       push('③ 代謝代償',m);
     }else{
@@ -328,14 +376,14 @@ function interp(){
     const dur=document.getElementById('dur').value;
     if(dur==='acute'){
       let m=`急性公式:預期 HCO₃ ≈ 24 − 0.2×(40−${pco2}) = ${ac.toFixed(0)} (±2);實測 ${hco3}`;
-      if(hco3>ac+2)m+=' → 高於急性預期 → 合併代謝鹼。';
-      else if(hco3<ac-2)m+=' → 低於急性預期 → 合併代謝酸或已慢性化。';
+      if(hco3>ac+2){m+=' → 高於急性預期 → 合併代謝鹼。';disorders.add('M.alk');compMixed=true;}
+      else if(hco3<ac-2){m+=' → 低於急性預期 → 合併代謝酸或已慢性化。';disorders.add('M.aci');compMixed=true;}
       else m+=' → 符合急性代償。';
       push('③ 代謝代償',m);
     }else if(dur==='chronic'){
       let m=`慢性公式:預期 HCO₃ ≈ 24 − 0.4×(40−${pco2}) = ${ch.toFixed(0)} (±2);實測 ${hco3}`;
-      if(hco3>ch+2)m+=' → 高於慢性預期 → 合併代謝鹼。';
-      else if(hco3<ch-2)m+=' → 低於慢性預期 → 合併代謝酸。';
+      if(hco3>ch+2){m+=' → 高於慢性預期 → 合併代謝鹼。';disorders.add('M.alk');compMixed=true;}
+      else if(hco3<ch-2){m+=' → 低於慢性預期 → 合併代謝酸。';disorders.add('M.aci');compMixed=true;}
       else m+=' → 符合慢性代償。';
       push('③ 代謝代償',m);
     }else{
@@ -354,16 +402,29 @@ function interp(){
     push('④ 陰離子間隙',agtxt+(high?` → 升高 (high AG) · ${labsLink}`:` → 正常範圍 · ${labsLink}`),high?'acid':'normal');
     if(high){
       const dd=(cag-12)/(24-hco3);let m;
-      if(!isFinite(dd)||Math.abs(24-hco3)<0.5)m='HCO₃ 接近 24,delta-ratio 不穩定,請結合臨床。';
-      else if(dd<0.4)m=`delta-ratio ${dd.toFixed(1)} < 1 → 同時合併正常 AG 代謝性酸中毒。`;
-      else if(dd<=2)m=`delta-ratio ${dd.toFixed(1)} ≈ 1–2 → 單純 high AG 代謝性酸中毒。`;
-      else m=`delta-ratio ${dd.toFixed(1)} > 2 → 同時合併代謝性鹼中毒或慢性呼吸性酸中毒(HCO₃ 基礎偏高)。`;
-      push('⑤ delta-delta',m+' 高 AG 病因 → MUDPILES(乳酸、酮酸、腎衰、毒物…)。');
+      if(!isFinite(dd)||Math.abs(24-hco3)<0.5)m='HCO₃ 接近 24,Δ-Δ 不穩定,請結合臨床。';
+      else if(dd<0.8){m=`Δ-Δ ratio ${dd.toFixed(2)} < 0.8 → 合併正常 AG 代謝性酸中毒 (HAGMA + NAGMA)。`;disorders.add('M.aci');ddMixed=true;}
+      else if(dd<=1.2)m=`Δ-Δ ratio ${dd.toFixed(2)} ≈ 0.8–1.2 → 1:1 比例,典型 DKA / ketoacidosis(β-OHB 與 HCO₃ 互換)。`;
+      else if(dd<=2)m=`Δ-Δ ratio ${dd.toFixed(2)} ≈ 1.2–2 → 典型 high AG 代謝性酸中毒(lactate ≈ 1.6 常見)。`;
+      else{m=`Δ-Δ ratio ${dd.toFixed(2)} > 2 → 合併代謝性鹼中毒(或慢性呼酸 baseline HCO₃ 高)。`;disorders.add('M.alk');ddMixed=true;}
+      push('⑤ Δ-Δ ratio',m+' 高 AG 病因 → MUDPILES(乳酸、酮酸、腎衰、毒物…);Δ-Δ 為輔助,須結合 lactate / ketone / Cl 變化。');
     }else{
-      push('⑤ 病因方向',`若為正常 AG 代謝性酸中毒 → 想腸胃道 HCO₃ 流失(腹瀉)或腎小管酸中毒(HARDUP) · ${naLink} · ${clLink}。`);
+      push('⑤ 病因方向',`若為正常 AG 代謝性酸中毒 → 想腸胃道 HCO₃ 流失(腹瀉)或腎小管酸中毒(HARDUPS) · ${naLink} · ${clLink}。`);
     }
   }else{
-    push('④ 陰離子間隙',`(選填 Na、Cl 可計算 AG 與 delta-delta;或直接用 ${labsLink} 算)`,'info');
+    push('④ 陰離子間隙',`(選填 Na、Cl 可計算 AG 與 Δ-Δ ratio;或直接用 ${labsLink} 算)`,'info');
+  }
+
+  // === 三重酸鹼障礙判定:同時偵測到 ≥ 3 種獨立的酸鹼異常 ===
+  const tri=document.getElementById('triple');
+  if(disorders.size>=3){
+    const dlist=[...disorders].map(d=>{
+      return {'M.aci':'代謝性酸中毒','M.alk':'代謝性鹼中毒','R.aci':'呼吸性酸中毒','R.alk':'呼吸性鹼中毒'}[d]||d;
+    }).join(' + ');
+    tri.innerHTML=`⚠ 三重酸鹼障礙 (Triple Disorder) 警示<span class="sub">偵測到 ${disorders.size} 種獨立障礙:${dlist}。常見於洗腎合併嚴重嘔吐、敗血休克合併呼吸衰竭等複雜情境。請結合病史、臨床情境綜合判讀,單靠數字無法定論。</span>`;
+    tri.classList.add('show');
+  }else{
+    tri.classList.remove('show');
   }
 
   out.innerHTML=S.map(s=>`<div class="step ${s.tone}"><span class="tag">${s.tag}</span><span>${s.t}</span></div>`).join('');
@@ -400,6 +461,20 @@ function validateRanges(){
 }
 fields.forEach(f=>document.getElementById(f).addEventListener('input',()=>{validateRanges();interp();}));
 document.getElementById('dur').addEventListener('change',interp);
+
+// Enter / ↓:跳到下一個輸入欄;Shift+Enter / ↑:跳回上一個
+const navFields=[...fields];
+navFields.forEach((f,i)=>{
+  document.getElementById(f).addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key==='ArrowDown'){
+      e.preventDefault();
+      const next=navFields[i+1];if(next)document.getElementById(next).focus();
+    }else if((e.key==='Enter'&&e.shiftKey)||e.key==='ArrowUp'){
+      e.preventDefault();
+      const prev=navFields[i-1];if(prev)document.getElementById(prev).focus();
+    }
+  });
+});
 
 // 從 URL query string 預填(從 labs AG 計算機跳過來時帶值)
 // 支援:?pH=&pco2=&hco3=&na=&cl=&alb=
