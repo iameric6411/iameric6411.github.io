@@ -130,6 +130,20 @@
   .toast.show{display:inline-block;animation:fadein .25s}
   @keyframes fadein{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
 
+  /* 氧合分析卡片 */
+  .oxgrid{display:flex;gap:12px;flex-wrap:wrap}
+  .oxstat{flex:1 1 200px;background:#0a0f14;border:1px solid #18242d;border-radius:9px;padding:13px 14px;transition:.2s}
+  .oxlabel{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;font-weight:700}
+  .oxval{font-size:24px;font-weight:700;font-family:var(--mono);color:var(--ink);margin-top:5px;line-height:1}
+  .oxval .unit{font-size:12px;color:var(--muted);font-weight:400;margin-left:5px}
+  .oxnote{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:7px;line-height:1.55}
+  .oxstat.normal{border-color:#27513c;background:#0c1a14}
+  .oxstat.normal .oxval{color:var(--safe)}
+  .oxstat.warn{border-color:#5a4818;background:#1a1408}
+  .oxstat.warn .oxval{color:var(--warn)}
+  .oxstat.severe{border-color:#6a2a18;background:#1a0e0a}
+  .oxstat.severe .oxval{color:var(--acid)}
+
   /* 三重酸鹼障礙標籤 */
   .triple{display:none;margin:12px 0 0;padding:11px 14px;background:#1a0e0a;border:1px solid #6a2a18;
     border-left:4px solid var(--acid);border-radius:9px;font-family:var(--mono);font-size:13px;color:#ff9d72;line-height:1.55;font-weight:700;letter-spacing:.3px}
@@ -167,6 +181,10 @@
       <div class="field"><label>Na</label><input id="na" type="number" inputmode="decimal" placeholder="選填"><span class="u">mEq/L</span></div>
       <div class="field"><label>Cl</label><input id="cl" type="number" inputmode="decimal" placeholder="選填"><span class="u">mEq/L</span></div>
       <div class="field"><label>Albumin</label><input id="alb" type="number" step="0.1" inputmode="decimal" placeholder="選填"><span class="u">g/dL</span></div>
+      <div class="field"><label>PaO₂</label><input id="pao2" type="number" step="1" inputmode="decimal" placeholder="選填"><span class="u">mmHg · 氧合</span></div>
+      <div class="field"><label>FiO₂</label><input id="fio2" type="number" step="1" inputmode="decimal" placeholder="21"><span class="u">% (室氣 21)</span></div>
+      <div class="field"><label>年齡</label><input id="age" type="number" step="1" inputmode="numeric" placeholder="選填"><span class="u">歲 · A-a 校正</span></div>
+      <div class="field"><label>PB(大氣壓)</label><input id="pb" type="number" step="1" inputmode="numeric" placeholder="760"><span class="u">mmHg · 台灣海平面 760</span></div>
       <div class="field"><label>呼吸障礙時程</label>
         <select id="dur" style="background:#0a0f14;border:1px solid #18242d;border-radius:8px;padding:10px 11px;color:var(--ink);font-family:var(--mono);font-size:13px;outline:none">
           <option value="acute" selected>急性(預設)</option>
@@ -239,16 +257,33 @@
     <p class="ref">代償公式:代謝性酸中毒 Winter's 預期 PaCO₂ = 1.5×HCO₃ + 8 (±2);代謝性鹼中毒 ≈ 40 + 0.7×(HCO₃−24);呼吸性以急性/慢性預期 HCO₃ 對照。AG = Na − (Cl + HCO₃),現代 ion-selective electrode 法正常約 6–12(舊版 8–12);白蛋白每低 1 g/dL 校正 AG +2.5。</p>
   </div>
 
+  <div class="box" id="oxbox" style="display:none">
+    <h2>氧合分析</h2>
+    <div class="oxgrid">
+      <div class="oxstat" id="ox_aa_box">
+        <div class="oxlabel">A-a Gradient</div>
+        <div class="oxval" id="ox_aa">—</div>
+        <div class="oxnote" id="ox_aa_note">—</div>
+      </div>
+      <div class="oxstat" id="ox_pf_box">
+        <div class="oxlabel">P/F Ratio</div>
+        <div class="oxval" id="ox_pf">—</div>
+        <div class="oxnote" id="ox_pf_note">—</div>
+      </div>
+    </div>
+    <p class="ref">A-a = PAO₂ − PaO₂;PAO₂ = FiO₂×(PB−47) − PaCO₂/0.8。Age-adjusted normal A-a ≈ (age/4)+4(無 age 則用 ≤ 15)。A-a 正常 → 純 hypoventilation;A-a 升高 → V/Q mismatch / shunt / 擴散障礙。P/F:Berlin ARDS 定義要求 PEEP ≥ 5 + 急性開始,> 300 排除、200–300 mild、100–200 moderate、≤ 100 severe。</p>
+  </div>
+
   <footer>
     教學示意用,公式為常見近似值(±範圍各家略異),臨床判讀須結合病史、容積與電解質。3×3 矩陣與流程排版參考 <a href="http://charliekuo.com/?p=2962" target="_blank" rel="noopener">Charlie Kuo · ABG 動脈氣體分析</a>。<br>
-    <a href="../">← 返回總覽</a> · <a href="../labs/">實驗室檢查</a> · <a href="../flow/">心電圖判讀</a>
+    <a href="../">← 返回總覽</a> · <a href="../labs/">實驗室檢查</a> · <a href="../flow/">心電圖判讀</a> · <a href="https://github.com/iameric6411/iameric6411.github.io/commits/main/abg" target="_blank" rel="noopener" style="color:#5a6d65">📝 changelog</a>
     <span style="color:#3a4842;font-family:ui-monospace,monospace;font-size:11px;">本頁最後 review:2026-06-15</span>
   </footer>
 </div>
 
 <script>
 const num=id=>{const v=parseFloat(document.getElementById(id).value);return isNaN(v)?null:v;};
-const fields=['pH','pco2','hco3','na','cl','alb'];
+const fields=['pH','pco2','hco3','na','cl','alb','pao2','fio2','age','pb'];
 
 // === 鑑別診斷小折疊區 (clerk/intern ward round 常被問的) ===
 const DDX={
@@ -389,6 +424,7 @@ function interp(){
     out.innerHTML='<p class="ph">輸入 pH、PaCO₂、HCO₃ 開始判讀。</p>';
     document.getElementById('dxarea').innerHTML='';
     document.getElementById('copybar').style.display='none';
+    document.getElementById('oxbox').style.display='none';
     LAST_INTERP=null;
     clearFlow();return;
   }
@@ -537,10 +573,13 @@ function interp(){
   }).join('');
   document.getElementById('dxarea').innerHTML=dxHtml;
 
+  // === 氧合分析(若有輸入 PaO₂)===
+  const ox=calcOxygen(pco2);
+
   // === 儲存最後一次判讀結果(供複製病歷使用)===
   LAST_INTERP={pH,pco2,hco3,na,cl,alb,primary,
     steps:S.map(s=>({tag:s.tag,t:s.t})),
-    disorders:[...disorders],dur:document.getElementById('dur').value};
+    disorders:[...disorders],dur:document.getElementById('dur').value,ox};
   document.getElementById('copybar').style.display='flex';
 
   // 標準化 primary 名稱(去除括號變體)再傳入流程圖
@@ -550,6 +589,49 @@ function interp(){
             :primary.includes('呼吸性鹼中毒')?'呼吸性鹼中毒':primary;
   highlightFlow(pH,pco2,hco3,na,cl,alb,pNorm);
 }
+// === 氧合分析:A-a gradient + P/F ratio + ARDS Berlin 分級 ===
+function calcOxygen(pco2){
+  const pao2=num('pao2');
+  const ox=document.getElementById('oxbox');
+  if(pao2==null){ox.style.display='none';return null;}
+  let fio2_in=num('fio2');
+  let fio2=fio2_in==null?0.21:(fio2_in>1?fio2_in/100:fio2_in);
+  const age=num('age');
+  const pb=num('pb')||760;
+  // Alveolar gas equation
+  const pao2_calc=fio2*(pb-47)-pco2/0.8;
+  const aa=pao2_calc-pao2;
+  const aaNormal=age!=null?(age/4)+4:15;
+  const pf=pao2/fio2;
+  ox.style.display='block';
+  // A-a render
+  const aaBox=document.getElementById('ox_aa_box');
+  aaBox.classList.remove('normal','warn','severe');
+  document.getElementById('ox_aa').innerHTML=aa.toFixed(0)+' <span class="unit">mmHg</span>';
+  if(aa<=aaNormal){
+    aaBox.classList.add('normal');
+    document.getElementById('ox_aa_note').textContent='正常 (≤ '+aaNormal.toFixed(0)+(age!=null?' age-adj':'')+') · 純 hypoventilation';
+  }else if(aa<=aaNormal*2){
+    aaBox.classList.add('warn');
+    document.getElementById('ox_aa_note').textContent='升高 (正常 ≤ '+aaNormal.toFixed(0)+') · 想 V/Q mismatch / 早期肺病';
+  }else{
+    aaBox.classList.add('severe');
+    document.getElementById('ox_aa_note').textContent='顯著升高 (正常 ≤ '+aaNormal.toFixed(0)+') · 想 shunt / ARDS / 嚴重 V/Q';
+  }
+  // P/F render
+  const pfBox=document.getElementById('ox_pf_box');
+  pfBox.classList.remove('normal','warn','severe');
+  let pfClass='normal',pfText='';
+  if(pf>300){pfClass='normal';pfText='> 300 → 排除 ARDS';}
+  else if(pf>=200){pfClass='warn';pfText='200–300 → mild ARDS (Berlin)';}
+  else if(pf>=100){pfClass='severe';pfText='100–200 → moderate ARDS';}
+  else{pfClass='severe';pfText='≤ 100 → severe ARDS';}
+  pfBox.classList.add(pfClass);
+  document.getElementById('ox_pf').innerHTML=pf.toFixed(0);
+  document.getElementById('ox_pf_note').innerHTML=pfText+'<br>FiO₂ 用 '+(fio2*100).toFixed(0)+'% · ARDS 定義需 PEEP ≥ 5';
+  return {pao2,fio2,aa,aaNormal,pf,age,pb};
+}
+
 let LAST_INTERP=null;
 function buildNote(){
   if(!LAST_INTERP)return '';
@@ -568,6 +650,11 @@ function buildNote(){
   if(L.disorders.length>=3){
     lines.push('  ⚠ Suspect triple acid-base disorder: '+L.disorders.join(' + '));
   }
+  if(L.ox){
+    lines.push('  Oxygenation: PaO₂ '+L.ox.pao2+', FiO₂ '+(L.ox.fio2*100).toFixed(0)+'%');
+    lines.push('    A-a gradient '+L.ox.aa.toFixed(0)+' (age-adj normal ≤ '+L.ox.aaNormal.toFixed(0)+')');
+    lines.push('    P/F ratio '+L.ox.pf.toFixed(0));
+  }
   lines.push('  Impression: '+(L.primary||'see steps')+(L.dur!=='auto'?' ('+L.dur+')':''));
   return lines.join('\n');
 }
@@ -580,7 +667,8 @@ document.getElementById('presets').addEventListener('click',e=>{
   const p=PRESETS[b.dataset.k];fields.forEach(f=>document.getElementById(f).value=p[f]??'');interp();
 });
 // 4.1 範圍驗證:超出生理可能範圍 → 紅框警告(不擋,只提示打錯 decimal)
-const RANGES={pH:[6.5,8.0],pco2:[10,120],hco3:[2,60],na:[100,180],cl:[70,140],alb:[0.5,6]};
+const RANGES={pH:[6.5,8.0],pco2:[10,120],hco3:[2,60],na:[100,180],cl:[70,140],alb:[0.5,6],
+  pao2:[20,650],fio2:[15,100],age:[0,120],pb:[400,800]};
 function validateRanges(){
   for(const [k,[lo,hi]] of Object.entries(RANGES)){
     const el=document.getElementById(k);
