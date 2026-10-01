@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后翼棄兵課程</title>
+<meta name="description" content="后翼棄兵(Queen's Gambit)系統課程:針對 Chess.com / Lichess 1000–1500 分段,整理所有常見變化、陷阱與中局計畫,附互動棋盤與四週練習表。">
+
+<style>
+  :root{
+    --bg:#070a0d;--card:#0c1217;--border:#182530;
+    --ink:#e7f3ee;--muted:#7f9489;--ghost:#46584f;--accent:#2bd07a;--warn:#f0b54a;--bad:#ef6b6b;
+    --sq-l:#c9d6cf;--sq-d:#5f8a74;--hl:#f0d65a;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:24px 16px 56px}
+  a{color:#5fd8ac;text-decoration:none}
+  h1{font-size:20px;font-weight:700;margin:0}
+  h2{font-size:15px;margin:30px 0 10px;letter-spacing:.3px}
+  h2 .n{font-family:var(--mono);color:var(--accent);margin-right:8px}
+  .sub{font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.7}
+  p,li{font-size:13.5px;line-height:1.75}
+  .muted{color:var(--muted)}
+  .box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:10px 0}
+  .tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+  .tbl th,.tbl td{border-bottom:1px solid var(--border);padding:8px 6px;text-align:left;vertical-align:top;line-height:1.55}
+  .tbl th{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:600}
+  .tbl td.m{font-family:var(--mono);white-space:nowrap;color:var(--accent)}
+  .tblwrap{overflow-x:auto}
+  .stars{color:var(--warn);letter-spacing:1px;white-space:nowrap}
+
+  .prog{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;color:var(--muted);margin:14px 0 0}
+  .bar{flex:1;height:6px;background:#111b22;border-radius:4px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--accent);width:0;transition:.3s width}
+
+  details.lesson{background:var(--card);border:1px solid var(--border);border-radius:12px;margin:10px 0}
+  details.lesson[open]{border-color:#27513c}
+  details.lesson>summary{list-style:none;cursor:pointer;padding:13px 16px;display:flex;gap:10px;align-items:center}
+  details.lesson>summary::-webkit-details-marker{display:none}
+  summary .t{flex:1;font-size:14px;font-weight:700}
+  summary .chk{font-family:var(--mono);font-size:11px;color:var(--ghost)}
+  summary .chk.done{color:var(--accent)}
+  .lbody{padding:0 16px 16px}
+  .goal{font-size:13px;color:var(--warn);margin:0 0 6px}
+  .lbody ul{margin:6px 0 10px;padding-left:20px}
+
+  .line{border-top:1px dashed var(--border);padding-top:14px;margin-top:14px}
+  .lname{font-size:13.5px;font-weight:700;margin:0 0 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:5px;border:1px solid}
+  .pill.trap{color:var(--bad);border-color:#5a2a2a}
+  .pill.w{color:#e7f3ee;border-color:#3a4a44}
+  .pill.b{color:#9fb3a9;border-color:#2a3a34;background:#05080a}
+  .viewer{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px}
+  @media (max-width:640px){.viewer{grid-template-columns:minmax(0,1fr)}}
+  .board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);aspect-ratio:1;width:100%;max-width:320px;border-radius:6px;overflow:hidden;
+    border:1px solid #27352f;user-select:none}
+  .sq{position:relative;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;font-size:min(8.2vw,31px);line-height:1}
+  .sq.l{background:var(--sq-l)}.sq.d{background:var(--sq-d)}
+  .sq.hl::after{content:"";position:absolute;inset:0;background:var(--hl);opacity:.42}
+  .sq span{position:relative;z-index:1}
+  .pw{color:#fff;text-shadow:0 0 1px #000,0 0 1px #000,0 1px 1px #000}
+  .pb{color:#111}
+  .coord{position:absolute;font-family:var(--mono);font-size:8px;color:#00000080;z-index:1}
+  .coord.f{right:2px;bottom:1px}.coord.r{left:2px;top:1px}
+  .ctrls{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;max-width:320px}
+  .btn{background:#0a0f14;border:1px solid #1b2832;color:var(--ink);border-radius:7px;padding:6px 10px;font-family:var(--mono);
+    font-size:12px;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:var(--accent)}
+  .btn.on{border-color:var(--accent);color:var(--accent)}
+  .moves{font-family:var(--mono);font-size:12.5px;line-height:2;margin:0}
+  .mv{cursor:pointer;padding:1px 4px;border-radius:4px}
+  .mv:hover{background:#13211b}
+  .mv.cur{background:#27513c;color:#fff}
+  .mv.hid{color:transparent;background:#111b22;user-select:none}
+  .mn{color:var(--ghost);margin-left:4px}
+  .note{margin:10px 0 0;padding:10px 12px;border-left:3px solid var(--accent);background:#0a1410;border-radius:0 8px 8px 0;font-size:13px;line-height:1.7;min-height:44px}
+  .note.empty{color:var(--ghost);border-left-color:#1b2832;background:transparent}
+  .quizq{color:var(--warn)}
+  .plan{margin:10px 0 0;font-size:12.5px;color:var(--muted)}
+  .plan li{font-size:12.5px;line-height:1.6}
+
+  .week{display:grid;grid-template-columns:72px 1fr;gap:4px 12px;font-size:13px;line-height:1.7}
+  .week b{font-family:var(--mono);color:var(--accent);font-weight:600}
+  footer{margin-top:36px;font-size:11.5px;color:#465751;line-height:1.7}
+  kbd{background:#0c1217;border:1px solid #1b2832;border-bottom-width:2px;border-radius:4px;padding:0 5px;font-family:var(--mono);font-size:11px}
+</style>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#070a0d">
+<link rel="icon" href="/icon-192.png" type="image/png">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>♛ 后翼棄兵 Queen's Gambit · 1000–1500 分段完整課程</h1>
+    <p class="sub">1.d4 d5 2.c4 —— 針對 Chess.com / Lichess 1000–1500 分段最常遇到的所有變化。每條變化都可在棋盤上逐步播放;
+      開啟「<b>測驗模式</b>」可隱藏下一步,先自己想再翻答案(和背 Anki 一樣:主動回想比重讀有效)。</p>
+    <div class="prog"><span id="progtxt">進度 0/8</span><div class="bar"><i id="progbar"></i></div></div>
+  </header>
+
+  <h2><span class="n">00</span>總覽:黑方第 2 步的所有常見回應</h2>
+  <div class="box tblwrap">
+    <table class="tbl">
+      <thead><tr><th>黑方 2…</th><th>名稱</th><th>低分段常見度</th><th>一句話重點</th><th>課</th></tr></thead>
+      <tbody>
+        <tr><td class="m">2…e6</td><td>后翼拒絕棄兵 QGD</td><td class="stars">★★★★★</td><td>最穩;小心<b>大象陷阱</b>(白方別貪 d5)</td><td>2、3、7</td></tr>
+        <tr><td class="m">2…dxc4</td><td>后翼接受棄兵 QGA</td><td class="stars">★★★★★</td><td>兵拿得回來;黑方 …b5 守兵 → a4!</td><td>1</td></tr>
+        <tr><td class="m">2…c6</td><td>斯拉夫 Slav / 半斯拉夫</td><td class="stars">★★★★☆</td><td>…Bf5 太早 → Qb3 打 b7</td><td>4、5</td></tr>
+        <tr><td class="m">2…Nf6</td><td>馬歇爾防禦</td><td class="stars">★★★☆☆</td><td>cxd5 + e4 建大中心</td><td>8</td></tr>
+        <tr><td class="m">2…e5</td><td>阿爾賓反棄兵</td><td class="stars">★★★☆☆</td><td>Nf3 + g3;千萬別 4.e3?(Lasker 陷阱)</td><td>6</td></tr>
+        <tr><td class="m">2…Nc6</td><td>奇哥林防禦</td><td class="stars">★★☆☆☆</td><td>拿雙象,打開局面</td><td>8</td></tr>
+        <tr><td class="m">2…Bf5</td><td>波羅的海防禦</td><td class="stars">★★☆☆☆</td><td>又是 b7 弱點;cxd5 拿雙象</td><td>8</td></tr>
+        <tr><td class="m">2…c5</td><td>對稱防禦</td><td class="stars">★★☆☆☆</td><td>黑后早出 → Nc3 先手發展</td><td>8</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="font-size:11.5px;margin:8px 0 0">常見度為經驗估計。想看真實數據:Lichess「Analysis board → Opening explorer → Lichess」,把 rating 篩選在 1000–1600,輸入 1.d4 d5 2.c4 即可看到你這個分段的實際比例與勝率。</p>
+  </div>
+
+  <h2><span class="n">01</span>四週課程表(每天 20–40 分鐘)</h2>
+  <div class="box week">
+    <b>第 1 週</b><div>第 1 課 QGA + 第 2 課 QGD。每天把當天的變化用<b>測驗模式</b>走 3 遍;下 3 盤 15+10 快棋專門走 1.d4 2.c4。</div>
+    <b>第 2 週</b><div>第 3 課少數兵進攻 + 第 4 課斯拉夫。重點不是背棋步,而是能說出「這個局面白方的計畫是什麼」。</div>
+    <b>第 3 週</b><div>第 5 課半斯拉夫 + 第 6 課阿爾賓 + 第 7 課孤兵。複習第 1–2 週的<b>所有陷阱</b>(間隔複習)。</div>
+    <b>第 4 週</b><div>第 8 課偏門大全 + 總複習。把自己這 4 週的對局丟進引擎,找出「第一個離開課程的那一步」,補進筆記。</div>
+    <b>之後</b><div>每週 1 次:Lichess Opening explorer 查自己最常輸的變化;Chess.com「Insights」看 1.d4 的勝率是否上升。</div>
+  </div>
+
+  <h2><span class="n">02</span>學習方法</h2>
+  <div class="box">
+    <ul style="margin:0;padding-left:20px">
+      <li><b>先懂想法,再背棋步。</b>1500 以下的對手 8 步內就會離開理論;你真正需要的是每個兵型的「計畫」。</li>
+      <li><b>陷阱優先。</b>標 <span class="pill trap">陷阱</span> 的變化在這個分段出現率極高,而且一招定勝負。</li>
+      <li><b>主動回想。</b>開「測驗模式」,看到局面先自己說出下一步,再按 ▶ 對答案。</li>
+      <li><b>實戰後立刻複盤。</b>Chess.com / Lichess 都能從對局直接開分析,找出「離開課程的那一步」。</li>
+      <li><b>練習工具:</b>Lichess Study(免費建立自己的開局章節)、Chessable 的 Queen's Gambit 課程(間隔重複)、Chess.com Lessons → Openings。</li>
+    </ul>
+  </div>
+
+  <h2><span class="n">03</span>課程</h2>
+  <p class="muted" style="font-size:12px;margin:0 0 4px">鍵盤:展開的棋盤上可用 <kbd>←</kbd> <kbd>→</kbd> 逐步、<kbd>Home</kbd> / <kbd>End</kbd> 跳到頭尾(點一下棋盤區域即可聚焦)。</p>
+  <div id="lessons"><p class="muted">載入中…</p></div>
+
+  <h2><span class="n">04</span>中局兵型速查</h2>
+  <div class="box tblwrap">
+    <table class="tbl">
+      <thead><tr><th>兵型</th><th>出現於</th><th>白方計畫</th><th>黑方計畫</th></tr></thead>
+      <tbody>
+        <tr><td><b>Carlsbad</b><br><span class="muted">白 d4/e3 vs 黑 d5/c6</span></td><td>QGD 交換、斯拉夫交換</td><td>少數兵進攻 b4–b5;或 f3 + e4 中心突破</td><td>王翼進攻:…Ne4、…f5、…Ng6</td></tr>
+        <tr><td><b>孤立后兵 IQP</b></td><td>塔拉什、QGA、半斯拉夫</td><td>壓 d5(對方孤兵時)/ 王翼攻擊 + d5 突破(自己孤兵時)</td><td>持孤兵方避免換子;對手則多換子</td></tr>
+        <tr><td><b>懸兵 c5/d5</b></td><td>QGD、塔拉什換子後</td><td>攻擊懸兵,逼其中一個前進後變弱</td><td>用懸兵控制中心,…d4 或 …c4 推進時機要對</td></tr>
+        <tr><td><b>斯拉夫 c6/d5 + 好象</b></td><td>斯拉夫主線</td><td>e4 中心推進;Qb3 打 b7</td><td>象先出兵鏈外,再 …e6;…c5 / …e5 解放</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    全部變化已用走子引擎(chess.js)逐步驗證合法性;局面於 build 時預先計算。<br>
+    <a href="../">← 返回總覽</a>
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const GLYPH={k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'};
+const FILES='abcdefgh';
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+let done=store.get('qg-done',{});
+let quiz=store.get('qg-quiz',false);
+
+function fenBoard(fen){
+  const rows=fen.split(' ')[0].split('/');
+  return rows.map(r=>{const out=[];for(const c of r){if(/\d/.test(c))for(let i=0;i<+c;i++)out.push(null);else out.push(c)}return out});
+}
+function renderBoard(el,ply,flip){
+  const b=fenBoard(ply.fen);let h='';
+  for(let i=0;i<8;i++)for(let j=0;j<8;j++){
+    const r=flip?7-i:i,f=flip?7-j:j;           // r: 0 = rank 8
+    const sq=FILES[f]+(8-r),pc=b[r][f];
+    const cls=((r+f)%2?'d':'l')+(sq===ply.from||sq===ply.to?' hl':'');
+    let inner=pc?`<span class="${pc===pc.toUpperCase()?'pw':'pb'}">${GLYPH[pc.toLowerCase()]}︎</span>`:'';
+    if(i===7)inner+=`<i class="coord f">${FILES[f]}</i>`;
+    if(j===0)inner+=`<i class="coord r">${8-r}</i>`;
+    h+=`<div class="sq ${cls}">${inner}</div>`;
+  }
+  el.innerHTML=h;
+}
+
+function mountLine(root,line){
+  const st={i:0,flip:line.side==='b'};
+  const N=line.plies.length-1;
+  const board=root.querySelector('.board'),moves=root.querySelector('.moves'),note=root.querySelector('.note');
+  function draw(){
+    renderBoard(board,line.plies[st.i],st.flip);
+    let h='';
+    for(let k=1;k<=N;k++){
+      if(k%2)h+=`<span class="mn">${(k+1)/2}.</span>`;
+      const hid=quiz&&k>st.i;
+      h+=`<span class="mv${k===st.i?' cur':''}${hid?' hid':''}" data-k="${k}">${line.plies[k].san}</span> `;
+    }
+    moves.innerHTML=h;
+    const txt=line.notes&&line.notes[st.i];
+    if(quiz&&st.i<N){
+      const who=st.i%2===0?'白方':'黑方';
+      note.className='note';
+      note.innerHTML=(txt&&st.i?`<div>${txt}</div>`:'')+`<div class="quizq">❓ ${who}下一步是什麼?想好再按 ▶</div>`;
+    }else if(txt){note.className='note';note.textContent=txt}
+    else{note.className='note empty';note.textContent=st.i===0?'按 ▶ 開始。':st.i===N?'變化結束。':'—'}
+  }
+  root.addEventListener('click',e=>{
+    const a=e.target.closest('[data-a]'),m=e.target.closest('.mv');
+    if(m&&!m.classList.contains('hid')){st.i=+m.dataset.k;draw();return}
+    if(!a)return;
+    const act=a.dataset.a;
+    if(act==='s')st.i=0;else if(act==='p')st.i=Math.max(0,st.i-1);
+    else if(act==='n')st.i=Math.min(N,st.i+1);else if(act==='e')st.i=N;
+    else if(act==='f')st.flip=!st.flip;
+    draw();
+  });
+  root.tabIndex=0;
+  root.addEventListener('keydown',e=>{
+    const map={ArrowLeft:'p',ArrowRight:'n',Home:'s',End:'e'};
+    if(!map[e.key])return;e.preventDefault();
+    root.querySelector(`[data-a="${map[e.key]}"]`).click();
+  });
+  root._redraw=draw;
+  draw();
+}
+
+function updateProgress(total){
+  const n=Object.values(done).filter(Boolean).length;
+  $('progtxt').textContent=`進度 ${n}/${total}`;
+  $('progbar').style.width=(100*n/total)+'%';
+}
+
+fetch('../data/chess-qg.json',{cache:'no-cache'}).then(r=>r.json()).then(data=>{
+  const wrap=$('lessons');
+  wrap.innerHTML=`<div style="margin:0 0 6px"><button class="btn${quiz?' on':''}" id="quizbtn">🧠 測驗模式:${quiz?'開':'關'}</button></div>`;
+  const viewers=[];
+  data.lessons.forEach(L=>{
+    const d=document.createElement('details');d.className='lesson';d.id=L.id;
+    d.innerHTML=`<summary><span class="t">${L.title}</span><span class="chk${done[L.id]?' done':''}">${done[L.id]?'✓ 已完成':'未完成'}</span></summary>
+      <div class="lbody">
+        <p class="goal">🎯 ${L.goal}</p>
+        <ul>${L.ideas.map(x=>`<li>${x}</li>`).join('')}</ul>
+        ${L.lines.map((ln,i)=>`<div class="line" data-i="${i}">
+          <p class="lname">${ln.name}
+            <span class="pill ${ln.side}">${ln.side==='w'?'白方視角':'黑方視角'}</span>
+            ${ln.trap?'<span class="pill trap">陷阱</span>':''}</p>
+          <div class="viewer">
+            <div><div class="board"></div>
+              <div class="ctrls">
+                <button class="btn" data-a="s">⏮</button><button class="btn" data-a="p">◀</button>
+                <button class="btn" data-a="n">▶</button><button class="btn" data-a="e">⏭</button>
+                <button class="btn" data-a="f">⇅ 翻轉</button>
+              </div></div>
+            <div><p class="moves"></p><div class="note"></div>
+              <ul class="plan">${(ln.plan||[]).map(x=>`<li>${x}</li>`).join('')}</ul></div>
+          </div></div>`).join('')}
+        <p style="margin:14px 0 0"><label style="font-size:13px;cursor:pointer">
+          <input type="checkbox" class="donebox" ${done[L.id]?'checked':''}> 這一課我已經能用測驗模式全部答對</label></p>
+      </div>`;
+    wrap.appendChild(d);
+    d.querySelectorAll('.line').forEach(el=>{mountLine(el,L.lines[+el.dataset.i]);viewers.push(el)});
+    d.querySelector('.donebox').addEventListener('change',e=>{
+      done[L.id]=e.target.checked;store.set('qg-done',done);
+      const c=d.querySelector('summary .chk');c.className='chk'+(e.target.checked?' done':'');
+      c.textContent=e.target.checked?'✓ 已完成':'未完成';
+      updateProgress(data.lessons.length);
+    });
+  });
+  $('quizbtn').addEventListener('click',e=>{
+    quiz=!quiz;store.set('qg-quiz',quiz);
+    e.target.classList.toggle('on',quiz);e.target.textContent=`🧠 測驗模式:${quiz?'開':'關'}`;
+    viewers.forEach(v=>v._redraw());
+  });
+  updateProgress(data.lessons.length);
+  if(location.hash){const t=document.querySelector(location.hash);if(t&&t.tagName==='DETAILS')t.open=true}
+}).catch(()=>{$('lessons').innerHTML='<p class="muted">課程資料載入失敗,請重新整理。</p>'});
+</script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))}</script>
+<script data-goatcounter="https://iameric6411.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

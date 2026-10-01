@@ -1,10 +1,10 @@
 // 簡易 service worker:首次載入後 stale-while-revalidate,離線可開所有頁面。
 // 升級資料/腳本時把 CACHE 版號 bump 即可強制更新。
-const CACHE='im-v6-2026-06-15';
+const CACHE='im-v7-2026-10-01';
 const ASSETS=[
   '/','/index.html',
-  '/ecg/','/acls/','/flow/','/labs/','/abg/','/anemia/',
-  '/data/labs.json','/data/search-extras.json',
+  '/ecg/','/acls/','/flow/','/labs/','/abg/','/anemia/','/chess/',
+  '/data/labs.json','/data/search-extras.json','/data/chess-qg.json',
   '/manifest.webmanifest','/icon-192.png','/icon-512.png',
   '/sitemap.xml','/robots.txt',
 ];
